@@ -1,20 +1,6 @@
-const { getNotificationQueue } = require('../queues/notificationQueue');
+const JobMatch = require('../models/JobMatch');
 const NotificationLog = require('../models/NotificationLog');
-
-function buildJobShortUrl(job) {
-  const base = process.env.PUBLIC_APP_URL || process.env.CLIENT_URL || 'http://localhost:5173';
-  return `${base.replace(/\/$/, '')}/j/${job.shortCode}`;
-}
-
-function getWageLabel(job) {
-  const suffixMap = {
-    hourly: '/hour',
-    daily: '/day',
-    weekly: '/week',
-    per_task: '/task',
-  };
-  return `Rs ${job.wageAmount}${suffixMap[job.wageType] || ''}`;
-}
+const { sendWhatsAppMessage, formatTwilioError } = require('./whatsappService');
 
 function normalizeIndianPhone(phone) {
   if (!phone || typeof phone !== 'string') return null;
@@ -26,61 +12,83 @@ function normalizeIndianPhone(phone) {
   return `+91${cleaned}`;
 }
 
-async function queueNotificationsForMatchedWorkers(job, workers) {
-  const queued = [];
-  const shortUrl = buildJobShortUrl(job);
-
-  const queue = getNotificationQueue();
+/**
+ * Sends WhatsApp to each matched worker immediately (no queue).
+ * One failure does not stop others.
+ */
+async function notifyMatchedWorkersDirectly(job, workers) {
+  let sentCount = 0;
+  let failedCount = 0;
+  let skippedCount = 0;
 
   for (const worker of workers) {
-    const normalizedPhone = normalizeIndianPhone(worker.phone);
-    if (!normalizedPhone) {
+    const phone = normalizeIndianPhone(worker.phone);
+    if (!phone) {
+      skippedCount += 1;
+      console.log(`[WhatsApp] SKIP worker=${worker._id} reason=invalid_or_missing_phone job=${job._id}`);
       continue;
     }
-
-    const existing = await NotificationLog.findOne({
-      jobId: job._id,
-      workerId: worker._id,
-      channel: 'whatsapp',
-    });
-
-    if (existing) {
-      continue;
-    }
-
-    await NotificationLog.create({
-      jobId: job._id,
-      workerId: worker._id,
-      channel: 'whatsapp',
-      status: 'queued',
-      attempts: 0,
-    });
 
     try {
-      await queue.add('send-whatsapp', {
-        jobId: String(job._id),
-        workerId: String(worker._id),
-        toPhone: normalizedPhone,
-        title: job.title,
-        wageLabel: getWageLabel(job),
-        distanceKm: worker.distanceKm,
-        shortUrl,
-      });
-    } catch (error) {
-      await NotificationLog.updateOne(
-        { jobId: job._id, workerId: worker._id, channel: 'whatsapp' },
-        { $set: { status: 'failed', errorMessage: `Queue unavailable: ${error.message}` } }
-      );
-      continue;
-    }
+      const message = await sendWhatsAppMessage(phone, job);
+      sentCount += 1;
+      console.log(`[WhatsApp] OK worker=${worker._id} phone=${phone} job=${job._id} sid=${message.sid}`);
 
-    queued.push(worker._id);
+      await JobMatch.updateOne(
+        { jobId: job._id, workerId: worker._id },
+        { $set: { matchStatus: 'notified' } }
+      );
+
+      await NotificationLog.findOneAndUpdate(
+        { jobId: job._id, workerId: worker._id, channel: 'whatsapp' },
+        {
+          $set: {
+            status: 'sent',
+            attempts: 1,
+            providerMessageId: message.sid,
+            errorMessage: null,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      failedCount += 1;
+      const detail =
+        error.twilioRaw ||
+        error.message ||
+        formatTwilioError(error.cause || error);
+      console.error(
+        `[WhatsApp] FAIL worker=${worker._id} phone=${phone} job=${job._id}`,
+        detail,
+        error.twilioCode != null ? `twilioCode=${error.twilioCode}` : ''
+      );
+
+      await JobMatch.updateOne(
+        { jobId: job._id, workerId: worker._id },
+        { $set: { matchStatus: 'failed_notification' } }
+      );
+
+      await NotificationLog.findOneAndUpdate(
+        { jobId: job._id, workerId: worker._id, channel: 'whatsapp' },
+        {
+          $set: {
+            status: 'failed',
+            attempts: 1,
+            errorMessage: detail.slice(0, 500),
+          },
+        },
+        { upsert: true, new: true }
+      );
+    }
   }
 
-  return { queuedCount: queued.length };
+  console.log(
+    `[WhatsApp] Job ${job._id} summary: sent=${sentCount} failed=${failedCount} skippedInvalidPhone=${skippedCount}`
+  );
+
+  return { sentCount, failedCount, skippedCount };
 }
 
 module.exports = {
-  queueNotificationsForMatchedWorkers,
-  buildJobShortUrl,
+  notifyMatchedWorkersDirectly,
 };

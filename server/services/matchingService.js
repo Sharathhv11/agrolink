@@ -31,6 +31,7 @@ async function queryWorkersByRadius(job, radiusKm) {
         distanceMeters: 1,
       },
     },
+    { $limit: 20 },
   ]);
 
   return users.map((user) => ({
@@ -50,7 +51,8 @@ async function matchWorkersForJob(job) {
 
   // Deduplicate users before DB upsert.
   const uniqueWorkers = Array.from(new Map(workers.map((w) => [String(w._id), w])).values())
-    .sort((a, b) => a.distanceKm - b.distanceKm);
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, 20);
 
   const matchDocs = [];
   for (const worker of uniqueWorkers) {

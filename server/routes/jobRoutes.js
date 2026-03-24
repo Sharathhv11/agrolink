@@ -7,7 +7,7 @@ const JobMatch = require('../models/JobMatch');
 const JobApplication = require('../models/JobApplication');
 const JobViewEvent = require('../models/JobViewEvent');
 const { matchWorkersForJob } = require('../services/matchingService');
-const { queueNotificationsForMatchedWorkers } = require('../services/notificationService');
+const { notifyMatchedWorkersDirectly } = require('../services/notificationService');
 const { getJobAnalytics } = require('../services/analyticsService');
 const { buildWorkerListPdfBuffer } = require('../services/pdfService');
 
@@ -131,13 +131,14 @@ router.post('/', protect, async (req, res) => {
     });
 
     const { workers, radiusUsedKm } = await matchWorkersForJob(job);
-    const notificationResult = await queueNotificationsForMatchedWorkers(job, workers);
+    const notificationResult = await notifyMatchedWorkersDirectly(job, workers);
 
     return res.status(201).json({
       jobId: job._id,
       shortCode: job.shortCode,
       matchedWorkers: workers.length,
-      notificationsQueued: notificationResult.queuedCount,
+      notificationsSent: notificationResult.sentCount,
+      notificationsFailed: notificationResult.failedCount,
       radiusUsedKm,
       message: 'Job posted successfully',
     });
@@ -305,6 +306,36 @@ router.get('/short/:shortCode', async (req, res) => {
       wageType: job.wageType,
       wageAmount: job.wageAmount,
       contactPreference: job.contactPreference,
+      farmer,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to fetch job' });
+  }
+});
+
+router.get('/public/:jobId', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.jobId)) {
+      return res.status(400).json({ message: 'Invalid job id' });
+    }
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const farmer = await User.findById(job.createdBy).select('name phone');
+    return res.json({
+      _id: job._id,
+      title: job.title,
+      description: job.description,
+      category: job.category,
+      wageType: job.wageType,
+      wageAmount: job.wageAmount,
+      startDate: job.startDate,
+      location: job.location,
+      facilities: job.facilities,
+      contactPreference: job.contactPreference,
+      shortCode: job.shortCode,
       farmer,
     });
   } catch (error) {

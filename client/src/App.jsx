@@ -12,6 +12,7 @@ import JobCreate from './pages/JobCreate';
 import JobAnalytics from './pages/JobAnalytics';
 import MatchedWorkers from './pages/MatchedWorkers';
 import JobShortView from './pages/JobShortView';
+import JobPublicView from './pages/JobPublicView';
 import JobsList from './pages/JobsList';
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
           <Route path="/jobs/new" element={<JobCreate />} />
           <Route path="/jobs/:jobId/analytics" element={<JobAnalytics />} />
           <Route path="/jobs/:jobId/workers" element={<MatchedWorkers />} />
+          <Route path="/jobs/view/:jobId" element={<JobPublicView />} />
           <Route path="/j/:shortCode" element={<JobShortView />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/mandi-prices" element={<MandiPrices />} />
