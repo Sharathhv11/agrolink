@@ -32,10 +32,28 @@ const userSchema = new mongoose.Schema(
       taluk: String,
       district: String,
       state: String,
+      addressLine: String,
       coordinates: {
         lat: Number,
         lng: Number,
       },
+    },
+    locationPoint: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        default: [77.5946, 12.9716],
+      },
+    },
+    availabilityStatus: {
+      type: String,
+      enum: ['available', 'busy', 'offline'],
+      default: 'available',
+      index: true,
     },
     categories: [
       {
@@ -149,6 +167,21 @@ const userSchema = new mongoose.Schema(
     timestamps: true, // This automatically handles `createdAt` and `updatedAt`
   }
 );
+
+userSchema.index({ locationPoint: '2dsphere' });
+userSchema.index({ categories: 1, availabilityStatus: 1 });
+
+userSchema.pre('save', function syncLocationPoint() {
+  const lat = this?.location?.coordinates?.lat;
+  const lng = this?.location?.coordinates?.lng;
+
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    this.locationPoint = {
+      type: 'Point',
+      coordinates: [lng, lat],
+    };
+  }
+});
 
 const User = mongoose.model('User', userSchema);
 

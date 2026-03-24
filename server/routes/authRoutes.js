@@ -24,7 +24,7 @@ router.post("/google", async (req, res) => {
     });
     
     if (!response.ok) {
-       throw new Error("Failed to fetch Google profile");
+       throw new Error(`Failed to fetch Google profile. Status: ${response.status}`);
     }
 
     const payload = await response.json();
@@ -46,9 +46,9 @@ router.post("/google", async (req, res) => {
       } else {
         user = await User.create({
           googleId: sub,
-          name: name,
-          email: email,
-          avatar: picture,
+          name: name || "Agrolink User",
+          email: email || `${sub}@agrolink.local`,
+          avatar: picture || "",
         });
         isNewUser = true;
       }
@@ -66,13 +66,17 @@ router.post("/google", async (req, res) => {
       needsOnboarding
     });
   } catch (error) {
-    console.error("Error verifying google token", error);
-    res.status(401).json({ message: "Invalid Google token" });
+    console.error("Error verifying google token or writing to DB:", error);
+    res.status(500).json({ message: "Authentication failed", error: error.message });
   }
 });
 
 router.get("/status", (req, res) => {
   res.json({ message: "Auth routes are working" });
+});
+
+router.post("/logout", (req, res) => {
+  res.json({ success: true });
 });
 
 module.exports = router;

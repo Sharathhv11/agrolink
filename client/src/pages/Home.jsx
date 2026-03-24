@@ -295,8 +295,8 @@ export default function Home() {
             </div>
             
             <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-1.5">
-              <button className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
-                <span className="text-xl group-hover:scale-110 transition-transform">🌱</span> {t.menu?.postJob || 'Post Job'}
+              <button onClick={() => navigate('/jobs')} className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
+                <span className="text-xl group-hover:scale-110 transition-transform">🌱</span> {t.menu?.jobs || 'Jobs'}
               </button>
               <button className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
                 <span className="text-xl group-hover:scale-110 transition-transform">🔍</span> {t.menu?.explore || 'Explore'}
@@ -503,7 +503,7 @@ export default function Home() {
       </div>
 
       {/* FLOATING ACTION BUTTON */}
-      <button className="fixed bottom-6 right-4 md:right-8 w-14 h-14 bg-[#1A6B3C] rounded-full shadow-lg flex items-center justify-center text-white hover:scale-105 hover:shadow-xl active:scale-95 transition-all z-40">
+      <button onClick={() => navigate('/jobs/new')} className="fixed bottom-6 right-4 md:right-8 w-14 h-14 bg-[#1A6B3C] rounded-full shadow-lg flex items-center justify-center text-white hover:scale-105 hover:shadow-xl active:scale-95 transition-all z-40">
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
         </svg>

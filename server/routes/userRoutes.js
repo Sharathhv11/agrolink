@@ -18,7 +18,7 @@ router.put('/onboard', protect, async (req, res) => {
       }
 
       if (req.body.location && typeof req.body.location === 'object') {
-        const { village, taluk, district, state, coordinates } = req.body.location;
+        const { village, taluk, district, state, addressLine, coordinates } = req.body.location;
         user.location = user.location || {};
         user.location.coordinates = user.location.coordinates || {};
 
@@ -26,6 +26,7 @@ router.put('/onboard', protect, async (req, res) => {
         if (typeof taluk === 'string') user.location.taluk = taluk;
         if (typeof district === 'string') user.location.district = district;
         if (typeof state === 'string') user.location.state = state;
+        if (typeof addressLine === 'string') user.location.addressLine = addressLine;
 
         if (coordinates && typeof coordinates === 'object') {
           const lat = Number(coordinates.lat);
@@ -58,6 +59,13 @@ router.put('/onboard', protect, async (req, res) => {
           return res.status(400).json({ message: 'Language must be "en" or "kn".' });
         }
         user.language = req.body.language;
+      }
+
+      if (typeof req.body.availabilityStatus === 'string') {
+        if (!['available', 'busy', 'offline'].includes(req.body.availabilityStatus)) {
+          return res.status(400).json({ message: 'Invalid availability status.' });
+        }
+        user.availabilityStatus = req.body.availabilityStatus;
       }
 
       const updatedUser = await user.save();
