@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    min-height: 48px;
+  }
+
+  /* High-contrast text defaults */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    color: #0F172A;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+}
+
+@layer utilities {
+  /* ==========================================
+     ANIMATION DELAYS — staggered entrances
+     ========================================== */
+  .anim-delay-100 { animation-delay: 0.1s; }
+  .anim-delay-200 { animation-delay: 0.2s; }
+  .anim-delay-300 { animation-delay: 0.3s; }
+  .anim-delay-400 { animation-delay: 0.4s; }
+  .anim-delay-500 { animation-delay: 0.5s; }
+  .anim-delay-600 { animation-delay: 0.6s; }
+  .anim-delay-700 { animation-delay: 0.7s; }
+  .anim-delay-800 { animation-delay: 0.8s; }
+  .anim-delay-900 { animation-delay: 0.9s; }
+  .anim-delay-1000 { animation-delay: 1.0s; }
+
+  /* ==========================================
+     GLASSMORPHISM — premium frosted layers
+     ========================================== */
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .glass-dark {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-premium {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+      0 1px 3px rgba(0,0,0,0.04),
+      0 8px 24px rgba(0,0,0,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  /* ==========================================
+     HERO GRADIENT — deep, rich, immersive
+     ========================================== */
+  .gradient-hero {
+    background: linear-gradient(
+      155deg, 
+      #052E16 0%, 
+      #14532D 20%, 
+      #166534 40%, 
+      #15803D 60%, 
+      #14532D 80%, 
+      #052E16 100%
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 12s ease infinite;
+  }
+
+  /* ==========================================
+     GRADIENT TEXT — vivid, eye-catching
+     ========================================== */
+  .gradient-text {
+    background: linear-gradient(135deg, #16A34A 0%, #22C55E 40%, #4ADE80 60%, #16A34A 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+
+  .gradient-text-gold {
+    background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ==========================================
+     SHIMMER BUTTON — premium sweep effect
+     ========================================== */
+  .shimmer-btn {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* removed shimmer-btn hover sweep */
+
+  /* ==========================================
+     FLOATING PARTICLES — ambient motion
+     ========================================== */
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    animation: float 6s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* ==========================================
+     CARD HOVER — premium lift & depth
+     ========================================== */
+  .hover-lift {
+    transition: 
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s ease;
+    will-change: transform, box-shadow;
+  }
+  .hover-lift:hover {
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.08),
+      0 8px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  /* ==========================================
+     SELECT POP — responsive tap feedback
+     ========================================== */
+  .select-pop {
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .select-pop:active {
+    transform: scale(0.96);
+  }
+
+  /* ==========================================
+     GRADIENT BORDER — animated accent
+     ========================================== */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(45deg, #16A34A, #4ADE80, #F59E0B, #16A34A);
+    background-size: 300% 300%;
+    animation: gradient-shift 4s ease infinite;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .gradient-border:hover::before {
+    opacity: 1;
+  }
+
+  /* ==========================================
+     PREMIUM CARD — elevated SaaS-style card
+     ========================================== */
+  .premium-card {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    transition: 
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s ease;
+    will-change: transform, box-shadow;
+  }
+  .premium-card:hover {
+    box-shadow: 
+      0 20px 50px rgba(0, 0, 0, 0.08),
+      0 8px 20px rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  /* ==========================================
+     ICON CONTAINER — premium icon wrapper
+     ========================================== */
+  .icon-container {
+    transition: 
+      transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s ease;
+    will-change: transform;
+  }
+}
+
+/* ==========================================
+   CUSTOM SCROLLBAR — refined, minimal
+   ========================================== */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(22, 163, 74, 0.2);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(22, 163, 74, 0.4);
+}
+
+/* ==========================================
+   SELECTION — branded highlight color
+   ========================================== */
+::selection {
+  background: rgba(22, 163, 74, 0.15);
+  color: #14532D;
+}
+
+/* ==========================================
+   FOCUS RING — accessible, premium
+   ========================================== */
+*:focus-visible {
+  outline: 2px solid #16A34A;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ==========================================
+   MANDI TICKER — smooth continuous scroll
+   ========================================== */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.mandi-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker 30s linear infinite;
+}
+
+/* Pause on hover for better readability */
+.mandi-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* ==========================================
+   SIDEBAR SLIDE & OVERLAY FADE
+   ========================================== */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+.sidebar-slide-in {
+  animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.sidebar-slide-out {
+  animation: slideOutLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
