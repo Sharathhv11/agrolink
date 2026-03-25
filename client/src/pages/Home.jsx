@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Menu, Search, MapPin, Share2, Heart, Repeat2, Plus, X, 
   ChevronDown, User, LogOut, TrendingUp, TrendingDown, Minus,
-  Briefcase, ClipboardCheck, Sprout
+  Briefcase, ClipboardCheck, Sprout, MessageCircle
 } from 'lucide-react';
 
 export default function Home() {
@@ -268,6 +268,12 @@ export default function Home() {
                   <Sprout className="w-4 h-4" strokeWidth={2.5} />
                 </div>
                 {t.menu?.fasalPlan || 'Fasal Plan'}
+              </button>
+              <button onClick={() => navigate('/community')} className="flex items-center gap-3 text-left w-full px-4 py-3 rounded-2xl hover:bg-slate-100 font-bold text-slate-700 hover:text-slate-900 transition-colors group">
+                <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
+                  <MessageCircle className="w-4 h-4" strokeWidth={2.5} />
+                </div>
+                {t.menu?.community || 'Community'}
               </button>
             </nav>
 

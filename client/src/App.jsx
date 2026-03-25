@@ -17,6 +17,7 @@ import JobsList from './pages/JobsList';
 import AppliedJobs from './pages/AppliedJobs';
 import FasalPlanner from './pages/FasalPlanner';
 import LaborRegister from './pages/LaborRegister';
+import Community from './pages/Community';
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/mandi-prices" element={<MandiPrices />} />
           <Route path="/fasal-planner" element={<FasalPlanner />} />
+          <Route path="/community" element={<Community />} />
         </Routes>
       </LanguageProvider>
     </AuthProvider>
