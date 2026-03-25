@@ -225,6 +225,7 @@ export default function FasalPlanner() {
       const data = await apiRequest('/fasal-planner/generate-roadmap', {
         method: 'POST',
         token,
+          timeoutMs: 60000,
         body: {
           cropName: crop.name.en,
           region: user?.location?.district || user?.location?.state || 'Karnataka',

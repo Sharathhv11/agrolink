@@ -206,24 +206,21 @@ export default function Home() {
         <div className="flex-1"></div>
 
         <div className="flex items-center gap-4">
-          <div className="flex bg-gray-100 rounded-full p-0.5 border border-gray-200">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                language === 'en' ? 'bg-[#1A6B3C] text-white shadow' : 'text-gray-500 hover:text-gray-900'
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'kn' : 'en')}
+            className="relative flex items-center w-14 h-7 bg-gray-100 rounded-full p-1 cursor-pointer border border-gray-200 focus:outline-none"
+            title="Toggle Language"
+          >
+            <div
+              className={`absolute left-1 h-5 w-6 bg-white rounded-full shadow-sm border border-gray-100 transition-transform duration-300 ease-in-out ${
+                language === 'en' ? 'translate-x-0' : 'translate-x-6'
               }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLanguage('kn')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                language === 'kn' ? 'bg-[#1A6B3C] text-white shadow' : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              ಕನ್ನಡ
-            </button>
-          </div>
+            ></div>
+            <div className="relative w-full flex justify-between z-10 text-[10px] font-extrabold tracking-wider pointer-events-none pt-[1px]">
+              <span className={`w-6 text-center transition-colors duration-300 ${language === 'en' ? 'text-[#1A6B3C]' : 'text-gray-400'}`}>EN</span>
+              <span className={`w-6 text-center transition-colors duration-300 ${language === 'kn' ? 'text-[#1A6B3C]' : 'text-gray-400'}`}>ಕನ್</span>
+            </div>
+          </button>
 
           {/* Profile Dropdown */}
           <div 
@@ -235,8 +232,14 @@ export default function Home() {
               className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-full transition-colors border border-transparent hover:border-gray-200"
               onClick={() => navigate('/profile')}
             >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 text-white flex items-center justify-center font-bold shadow-inner">
-                {user?.name?.charAt(0) || 'U'}
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-inner border border-gray-200">
+                {(user?.avatar || user?.picture) ? (
+                  <img src={user?.avatar || user?.picture} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 text-white flex items-center justify-center font-bold">
+                    {user?.name?.charAt(0) || 'U'}
+                  </div>
+                )}
               </div>
               <span className="font-bold text-sm hidden sm:block text-gray-800 pr-1">{user?.name?.split(' ')[0] || 'User'}</span>
             </div>
@@ -315,8 +318,14 @@ export default function Home() {
             
             <div className="p-4 border-t border-gray-100 bg-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 text-white flex items-center justify-center font-bold">
-                  {user?.name?.charAt(0) || 'U'}
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-inner border border-gray-200">
+                  {(user?.avatar || user?.picture) ? (
+                    <img src={user?.avatar || user?.picture} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 text-white flex items-center justify-center font-bold">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">{user?.name || 'User'}</p>

@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // ── Auth middleware ──────────────────────────────────────────────────
 function authMiddleware(req, res, next) {
@@ -367,21 +368,161 @@ function buildRoadmap(cropName, language) {
   };
 }
 
+function stripCodeFences(text) {
+  return String(text || '')
+    .replace(/```(?:json)?/gi, '')
+    .replace(/```/g, '')
+    .trim();
+}
+
+function extractJson(text) {
+  const cleaned = stripCodeFences(text);
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('Gemini returned no valid JSON object');
+  }
+  return cleaned.slice(start, end + 1);
+}
+
+function parseRoadmapFromGeminiText(text) {
+  const jsonText = extractJson(text);
+  const obj = JSON.parse(jsonText);
+  if (!obj || !Array.isArray(obj.checkpoints)) {
+    throw new Error('Gemini JSON missing `checkpoints` array');
+  }
+  return obj;
+}
+
+function geminiCandidates() {
+  // "Gemma 37B" may not exist in the public Gemini catalog; try common candidates and fallback.
+  return ['gemma-3-37b-it', 'gemma-3-27b-it', 'gemma-2-27b-it'];
+}
+
+async function generateCheckpointsWithGemini({ cropName, language, region, soilType }) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  const targetLang = language === 'kn' ? 'kn' : 'en';
+  const phaseOrder = ['land', 'sowing', 'irrigation', 'fertilizer', 'pest', 'flowering', 'harvest', 'post'];
+  const workerCategoryEnum = [
+    'laborer',
+    'seed_supplier',
+    'irrigation_contractor',
+    'pesticide_sprayer',
+    'fertilizer_supplier',
+    'equipment_rental',
+    'transport_provider',
+    'drone_operator',
+    'agriculture_advisor',
+    'soil_testing_agent',
+    'labor_contractor',
+    'labor_contractor_agent',
+    'machine_owner',
+    'machine_operator',
+    'pesticide_supplier',
+  ];
+
+  const prompt = `
+You are an expert agronomist and field-planning assistant.
+Generate a mobile-friendly crop plan timeline for "${cropName}".
+
+Rules:
+1) Return ONLY valid JSON (no markdown, no explanations).
+2) JSON must have exactly these keys:
+   - "summary" (string)
+   - "checkpoints" (array)
+3) Language: ${targetLang === 'kn' ? 'Respond in Kannada (kn)' : 'Respond in English (en)'}.
+   All checkpoint fields like title/description/tasks/tips must be in that language.
+4) Create 8 checkpoints with phase order exactly:
+   ${phaseOrder.join(', ')}
+5) Each checkpoint must be shaped like:
+   {
+     "week": number,
+     "weekRange": string,
+     "phase": string,
+     "title": string,
+     "description": string,
+     "icon": string,
+     "tasks": string[],
+     "workersNeeded": [
+        {
+          "role": string,
+          "category": string,
+          "count": number,
+          "ratePerDay": string,
+          "daysNeeded": number
+        }
+     ],
+     "inputsRequired": [
+        { "item": string, "quantity": string, "estimatedCost": string }
+     ],
+     "tips": string
+   }
+6) workersNeeded.category MUST be one of:
+   ${workerCategoryEnum.join(', ')}
+7) ratePerDay MUST be like "₹350" (no "/day" text inside).
+8) estimatedCost MUST be like "₹7000" (no extra commentary).
+9) Use safe, realistic values for Karnataka conditions.
+10) Use these hints when relevant:
+   - Region: ${region || 'Karnataka'}
+   - Soil type: ${soilType || 'Not specified'}
+
+Return JSON now.
+`.trim();
+
+  let lastErr;
+  for (const modelName of geminiCandidates()) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 1800,
+        },
+      });
+
+      const result = await model.generateContent(prompt);
+      const text = result?.response?.text?.() ?? '';
+      const parsed = parseRoadmapFromGeminiText(text);
+      return parsed;
+    } catch (err) {
+      lastErr = err;
+      console.warn('[FasalPlanner][Gemini] model failed:', modelName, err?.message || err);
+    }
+  }
+  throw lastErr || new Error('Gemini generation failed');
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  POST /api/fasal-planner/generate-roadmap
 //  Body: { cropName, soilType?, region?, language? }
-//  Returns a preloaded crop roadmap (no external AI calls)
+//  Returns roadmap JSON; uses Gemini for checkpoints with fallback.
 // ═══════════════════════════════════════════════════════════════════
 router.post('/generate-roadmap', authMiddleware, async (req, res) => {
   try {
-    const { cropName, language = 'en' } = req.body || {};
+    const { cropName, language = 'en', region, soilType } = req.body || {};
 
     if (!cropName) {
       return res.status(400).json({ message: 'cropName is required' });
     }
 
-    const roadmap = buildRoadmap(cropName, language);
-    return res.json({ roadmap });
+    // Stable base (durations/costs) + Gemini for detailed timeline.
+    const baseRoadmap = buildRoadmap(cropName, language);
+    try {
+      const gemini = await generateCheckpointsWithGemini({ cropName, language, region, soilType });
+      const roadmap = {
+        ...baseRoadmap,
+        summary: typeof gemini.summary === 'string' && gemini.summary.trim() ? gemini.summary : baseRoadmap.summary,
+        checkpoints: gemini.checkpoints,
+      };
+      return res.json({ roadmap });
+    } catch (geminiErr) {
+      console.warn('[FasalPlanner] Gemini fallback to preloaded roadmap:', geminiErr?.message || geminiErr);
+      return res.json({ roadmap: baseRoadmap });
+    }
   } catch (err) {
     console.error('Fasal Planner generate-roadmap error:', err);
     return res.status(500).json({ message: err.message || 'Internal server error' });

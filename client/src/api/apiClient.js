@@ -14,9 +14,9 @@ export function setUnauthorizedHandler(fn) {
  * - 401 → redirect to login
  * - 404 on /users/me (session/user missing) → redirect to login
  */
-export async function apiRequest(path, { method = 'GET', token, body, isBlob = false } = {}) {
+export async function apiRequest(path, { method = 'GET', token, body, isBlob = false, timeoutMs = 15000 } = {}) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   let response;
 
   try {

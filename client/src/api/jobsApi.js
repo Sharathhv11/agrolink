@@ -16,6 +16,20 @@ export function downloadWorkerPdf(jobId, token) {
   return apiRequest(`/jobs/${jobId}/workers.pdf`, { method: 'GET', token, isBlob: true });
 }
 
+export function downloadJobAnalyticsPdf(jobId, token, section) {
+  const slug =
+    section === 'matched' ? 'matched'
+      : section === 'applied' ? 'applied'
+        : 'approved';
+
+  return apiRequest(`/jobs/${jobId}/analytics/${slug}.pdf`, {
+    method: 'GET',
+    token,
+    isBlob: true,
+    timeoutMs: 60000,
+  });
+}
+
 export function getMyJobs(token) {
   return apiRequest('/jobs/my-jobs', { method: 'GET', token });
 }

@@ -9,7 +9,7 @@ const JobViewEvent = require('../models/JobViewEvent');
 const { matchWorkersForJob } = require('../services/matchingService');
 const { notifyMatchedWorkersDirectly } = require('../services/notificationService');
 const { getJobAnalytics } = require('../services/analyticsService');
-const { buildWorkerListPdfBuffer } = require('../services/pdfService');
+const { buildWorkerListPdfBuffer, buildWorkersSectionPdfBuffer } = require('../services/pdfService');
 
 const router = express.Router();
 const jobCreateRateLimit = new Map();
@@ -380,6 +380,97 @@ router.get('/:jobId/workers.pdf', protect, async (req, res) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="job-${job.shortCode}-workers.pdf"`);
+    return res.send(buffer);
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to generate PDF' });
+  }
+});
+
+// Farmer job analytics PDFs: matched / applied / approved
+router.get('/:jobId/analytics/matched.pdf', protect, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+    if (String(job.createdBy) !== String(req.user._id)) return res.status(403).json({ message: 'Not allowed' });
+
+    const matches = await JobMatch.find({ jobId: job._id }).populate('workerId', 'name phone location');
+    const workers = matches.map((m) => m.workerId).filter(Boolean);
+
+    const buffer = await buildWorkersSectionPdfBuffer({
+      job,
+      sectionTitle: 'Matched Workers',
+      sectionSubtitle: `Matched list (${workers.length})`,
+      workers,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="job-${job.shortCode || job._id}-matched.pdf"`
+    );
+    return res.send(buffer);
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to generate PDF' });
+  }
+});
+
+router.get('/:jobId/analytics/applied.pdf', protect, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+    if (String(job.createdBy) !== String(req.user._id)) return res.status(403).json({ message: 'Not allowed' });
+
+    const apps = await JobApplication.find({ jobId: job._id, status: 'applied' })
+      .sort({ createdAt: -1 })
+      .populate('workerId', 'name phone location');
+
+    const workers = apps.map((a) => a.workerId).filter(Boolean);
+
+    const buffer = await buildWorkersSectionPdfBuffer({
+      job,
+      sectionTitle: 'Applied Workers',
+      sectionSubtitle: `Applied list (${workers.length})`,
+      workers,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="job-${job.shortCode || job._id}-applied.pdf"`
+    );
+    return res.send(buffer);
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to generate PDF' });
+  }
+});
+
+router.get('/:jobId/analytics/approved.pdf', protect, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+    if (String(job.createdBy) !== String(req.user._id)) return res.status(403).json({ message: 'Not allowed' });
+
+    const apps = await JobApplication.find({
+      jobId: job._id,
+      status: { $in: ['shortlisted', 'hired'] },
+    })
+      .sort({ createdAt: -1 })
+      .populate('workerId', 'name phone location');
+
+    const workers = apps.map((a) => a.workerId).filter(Boolean);
+
+    const buffer = await buildWorkersSectionPdfBuffer({
+      job,
+      sectionTitle: 'Approved / Selected Workers',
+      sectionSubtitle: `Approved list (${workers.length})`,
+      workers,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="job-${job.shortCode || job._id}-approved.pdf"`
+    );
     return res.send(buffer);
   } catch (error) {
     return res.status(500).json({ message: error.message || 'Failed to generate PDF' });
