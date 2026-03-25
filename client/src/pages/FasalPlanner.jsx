@@ -3,86 +3,91 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { apiRequest } from '../api/apiClient';
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  MapPin,
+  Leaf,
+  Sparkles,
+  ChevronDown,
+  CheckCircle2,
+  Package,
+  Users,
+  Info,
+  Banknote,
+  Search,
+  Star
+} from 'lucide-react';
 
-// ── Crop Data ────────────────────────────────────────────────────────
 const CROPS = [
   {
     id: 'ragi',
     name: { en: 'Ragi (Finger Millet)', kn: 'ರಾಗಿ' },
     emoji: '🌾',
-    color: '#B45309',
-    gradient: 'from-amber-600 to-amber-800',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50',
+    border: 'border-amber-100',
     season: { en: 'Kharif', kn: 'ಖಾರಿಫ್' },
     duration: { en: '4-5 months', kn: '4-5 ತಿಂಗಳು' },
-    image: '🌾',
     desc: {
-      en: 'Highly nutritious millet, drought-resistant, ideal for Karnataka and South India.',
-      kn: 'ಅತ್ಯಂತ ಪೌಷ್ಟಿಕ ರಾಗಿ, ಬರ ನಿರೋಧಕ, ಕರ್ನಾಟಕ ಮತ್ತು ದಕ್ಷಿಣ ಭಾರತಕ್ಕೆ ಸೂಕ್ತ.',
+      en: 'Highly nutritious millet, drought-resistant, ideal for Karnataka.',
+      kn: 'ಅತ್ಯಂತ ಪೌಷ್ಟಿಕ ರಾಗಿ, ಬರ ನಿರೋಧಕ, ಕರ್ನಾಟಕಕ್ಕೆ ಸೂಕ್ತ.',
     },
   },
   {
     id: 'wheat',
     name: { en: 'Wheat', kn: 'ಗೋಧಿ' },
     emoji: '🌿',
-    color: '#15803D',
-    gradient: 'from-green-600 to-green-800',
-    bg: 'bg-green-50',
-    border: 'border-green-200',
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50',
+    border: 'border-emerald-100',
     season: { en: 'Rabi', kn: 'ರಬಿ' },
     duration: { en: '4-5 months', kn: '4-5 ತಿಂಗಳು' },
-    image: '🌿',
     desc: {
-      en: 'Staple grain crop, best grown in cool season with good irrigation.',
-      kn: 'ಪ್ರಮುಖ ಧಾನ್ಯ ಬೆಳೆ, ತಂಪು ಋತುವಿನಲ್ಲಿ ಉತ್ತಮ ನೀರಾವರಿಯೊಂದಿಗೆ ಬೆಳೆಯಿರಿ.',
+      en: 'Staple grain crop, best grown in cool season with irrigation.',
+      kn: 'ಪ್ರಮುಖ ಧಾನ್ಯ ಬೆಳೆ, ತಂಪು ಋತುವಿನಲ್ಲಿ ಉತ್ತಮ.',
     },
   },
   {
     id: 'corn',
     name: { en: 'Corn (Maize)', kn: 'ಮೆಕ್ಕೆಜೋಳ' },
     emoji: '🌽',
-    color: '#CA8A04',
-    gradient: 'from-yellow-600 to-yellow-800',
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
+    iconColor: 'text-yellow-600',
+    iconBg: 'bg-yellow-50',
+    border: 'border-yellow-100',
     season: { en: 'Kharif / Rabi', kn: 'ಖಾರಿಫ್ / ರಬಿ' },
     duration: { en: '3-4 months', kn: '3-4 ತಿಂಗಳು' },
-    image: '🌽',
     desc: {
-      en: 'Versatile cereal crop with high demand for food, feed & industrial use.',
-      kn: 'ಆಹಾರ, ಪಶು ಆಹಾರ ಮತ್ತು ಕೈಗಾರಿಕಾ ಬಳಕೆಗೆ ಹೆಚ್ಚು ಬೇಡಿಕೆ ಇರುವ ಬಹುಮುಖ ಧಾನ್ಯ.',
+      en: 'Versatile cereal crop with high demand for food & feed.',
+      kn: 'ಆಹಾರ ಮತ್ತು ಪಶು ಆಹಾರಕ್ಕೆ ಹೆಚ್ಚು ಬೇಡಿಕೆ ಇರುವ ಬಹುಮುಖ ಧಾನ್ಯ.',
     },
   },
   {
     id: 'paddy',
     name: { en: 'Paddy (Rice)', kn: 'ಭತ್ತ' },
     emoji: '🍚',
-    color: '#0D9488',
-    gradient: 'from-teal-600 to-teal-800',
-    bg: 'bg-teal-50',
-    border: 'border-teal-200',
+    iconColor: 'text-indigo-600',
+    iconBg: 'bg-indigo-50',
+    border: 'border-indigo-100',
     season: { en: 'Kharif', kn: 'ಖಾರಿಫ್' },
     duration: { en: '4-6 months', kn: '4-6 ತಿಂಗಳು' },
-    image: '🍚',
     desc: {
-      en: 'Major food grain, requires standing water, high yield with proper management.',
-      kn: 'ಪ್ರಮುಖ ಆಹಾರ ಧಾನ್ಯ, ನಿಂತ ನೀರು ಅಗತ್ಯ, ಸರಿಯಾದ ನಿರ್ವಹಣೆಯಿಂದ ಹೆಚ್ಚಿನ ಇಳುವರಿ.',
+      en: 'Major food grain, requires standing water, high yield.',
+      kn: 'ಪ್ರಮುಖ ಆಹಾರ ಧಾನ್ಯ, ನಿಂತ ನೀರು ಅಗತ್ಯ, ಹೆಚ್ಚಿನ ಇಳುವರಿ.',
     },
   },
   {
     id: 'sugarcane',
     name: { en: 'Sugarcane', kn: 'ಕಬ್ಬು' },
     emoji: '🎋',
-    color: '#7C3AED',
-    gradient: 'from-violet-600 to-violet-800',
-    bg: 'bg-violet-50',
-    border: 'border-violet-200',
+    iconColor: 'text-rose-600',
+    iconBg: 'bg-rose-50',
+    border: 'border-rose-100',
     season: { en: 'All Year', kn: 'ವರ್ಷಪೂರ್ತಿ' },
     duration: { en: '12-18 months', kn: '12-18 ತಿಂಗಳು' },
-    image: '🎋',
     desc: {
-      en: 'Cash crop with high profit potential, needs rich soil and abundant water.',
+      en: 'Cash crop with high profit potential, needs rich soil.',
       kn: 'ಹೆಚ್ಚಿನ ಲಾಭದ ಸಾಮರ್ಥ್ಯ ಹೊಂದಿರುವ ವಾಣಿಜ್ಯ ಬೆಳೆ.',
     },
   },
@@ -90,64 +95,57 @@ const CROPS = [
     id: 'groundnut',
     name: { en: 'Groundnut', kn: 'ಕಡಲೆಕಾಯಿ' },
     emoji: '🥜',
-    color: '#DC2626',
-    gradient: 'from-red-600 to-red-800',
-    bg: 'bg-red-50',
-    border: 'border-red-200',
+    iconColor: 'text-orange-600',
+    iconBg: 'bg-orange-50',
+    border: 'border-orange-100',
     season: { en: 'Kharif', kn: 'ಖಾರಿಫ್' },
     duration: { en: '3-5 months', kn: '3-5 ತಿಂಗಳು' },
-    image: '🥜',
     desc: {
-      en: 'Oilseed crop, good for sandy & loamy soils, nitrogen-fixing legume.',
+      en: 'Oilseed crop, good for sandy & loamy soils.',
       kn: 'ಎಣ್ಣೆ ಬೀಜ ಬೆಳೆ, ಮರಳು ಮತ್ತು ಲೋಮ ಮಣ್ಣಿಗೆ ಸೂಕ್ತ.',
     },
   },
 ];
 
-// ── Text constants ───────────────────────────────────────────────────
 const TEXT = {
   en: {
     title: 'Fasal Planner',
-    subtitle: 'AI-Powered Crop Planning for Smart Farming',
-    selectCrop: 'Choose your crop to get a complete AI-powered roadmap',
-    season: 'Season',
-    duration: 'Duration',
-    planNow: 'Plan Now',
-    generating: 'AI is creating your roadmap...',
-    roadmapTitle: 'Crop Roadmap',
-    back: '← Back to Crops',
-    totalDuration: 'Total Duration',
-    bestSeason: 'Best Season',
-    costPerAcre: 'Cost / Acre',
-    yieldPerAcre: 'Yield / Acre',
-    tasksLabel: 'Tasks',
-    workersLabel: 'Workers Needed',
-    inputsLabel: 'Inputs Required',
-    tipsLabel: 'Pro Tip',
-    findWorkers: 'Find Nearby Workers',
-    nearbyWorkers: 'Available Workers Nearby',
-    noWorkers: 'No workers found in 5km radius. Try expanding your search.',
-    workerDistance: 'km away',
-    jobsDone: 'jobs done',
-    ratePerDay: '/ day',
+    subtitle: 'AI-Powered Smart Roadmap',
+    selectCrop: 'Select a crop below to generate an exact agricultural sequence tailored to your region.',
+    planNow: 'Generate Plan',
+    generating: 'Structuring AI Roadmap',
+    roadmapTitle: 'Sequential Field Guide',
+    back: 'Select Another Crop',
+    totalDuration: 'Total Cycle',
+    bestSeason: 'Optimal Season',
+    costPerAcre: 'Est. Cost/Acre',
+    yieldPerAcre: 'Est. Yield/Acre',
+    tasksLabel: 'Core Tasks',
+    workersLabel: 'Labour Requirements',
+    inputsLabel: 'Logistics & Inputs',
+    tipsLabel: 'Pro Insight',
+    findWorkers: 'Source Local Workers',
+    nearbyWorkers: 'Local Worker Matching',
+    noWorkers: 'No workers matching these skills within 5km.',
+    workerDistance: 'km',
+    jobsDone: 'jobs tracked',
+    ratePerDay: '/day',
     daysNeeded: 'days',
-    item: 'Item',
-    qty: 'Qty',
-    cost: 'Est. Cost',
-    loading: 'Loading...',
-    errorRetry: 'Something went wrong. Please try again.',
-    retry: 'Retry',
+    item: 'Resource',
+    qty: 'Volume',
+    cost: 'Est. Target',
+    loading: 'Sourcing...',
+    errorRetry: 'Unable to establish secure connection. Retry.',
+    retry: 'Reattempt',
   },
   kn: {
     title: 'ಫಸಲ್ ಯೋಜನಾಕಾರ',
     subtitle: 'AI-ಆಧಾರಿತ ಬೆಳೆ ಯೋಜನೆ',
     selectCrop: 'ಸಂಪೂರ್ಣ AI ಮಾರ್ಗಸೂಚಿ ಪಡೆಯಲು ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
-    season: 'ಋತು',
-    duration: 'ಅವಧಿ',
     planNow: 'ಯೋಜನೆ ಮಾಡಿ',
     generating: 'AI ನಿಮ್ಮ ಮಾರ್ಗಸೂಚಿ ರಚಿಸುತ್ತಿದೆ...',
     roadmapTitle: 'ಬೆಳೆ ಮಾರ್ಗಸೂಚಿ',
-    back: '← ಬೆಳೆಗಳಿಗೆ ಹಿಂತಿರುಗಿ',
+    back: 'ಬೆಳೆಗಳಿಗೆ ಹಿಂತಿರುಗಿ',
     totalDuration: 'ಒಟ್ಟು ಅವಧಿ',
     bestSeason: 'ಉತ್ತಮ ಋತು',
     costPerAcre: 'ವೆಚ್ಚ / ಎಕರೆ',
@@ -172,13 +170,12 @@ const TEXT = {
   },
 };
 
-// ── Animated dots component ──────────────────────────────────────────
 const LoadingDots = () => (
-  <span className="inline-flex gap-1 ml-2">
+  <span className="inline-flex gap-1 ml-1">
     {[0, 1, 2].map((i) => (
       <span
         key={i}
-        className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
         style={{ animationDelay: `${i * 0.15}s` }}
       />
     ))}
@@ -192,27 +189,24 @@ export default function FasalPlanner() {
   const t = TEXT[language] || TEXT.en;
   const roadmapRef = useRef(null);
 
-  // ── State ──
-  const [view, setView] = useState('crops'); // 'crops' | 'loading' | 'roadmap'
+  const [view, setView] = useState('crops');
   const [selectedCrop, setSelectedCrop] = useState(null);
   const [roadmap, setRoadmap] = useState(null);
   const [error, setError] = useState('');
   const [expandedCheckpoint, setExpandedCheckpoint] = useState(null);
-  const [workerData, setWorkerData] = useState({}); // { checkpointIndex: workers[] }
+  const [workerData, setWorkerData] = useState({});
   const [loadingWorkers, setLoadingWorkers] = useState({});
   const [animatedCards, setAnimatedCards] = useState([]);
 
-  // ── Animate cards on mount ──
   useEffect(() => {
     const timers = CROPS.map((_, i) =>
       setTimeout(() => {
         setAnimatedCards((prev) => [...prev, i]);
-      }, i * 100)
+      }, i * 80)
     );
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  // ── Generate roadmap ──
   const handlePlanCrop = async (crop) => {
     setSelectedCrop(crop);
     setView('loading');
@@ -225,7 +219,7 @@ export default function FasalPlanner() {
       const data = await apiRequest('/fasal-planner/generate-roadmap', {
         method: 'POST',
         token,
-          timeoutMs: 60000,
+        timeoutMs: 60000,
         body: {
           cropName: crop.name.en,
           region: user?.location?.district || user?.location?.state || 'Karnataka',
@@ -245,7 +239,6 @@ export default function FasalPlanner() {
     }
   };
 
-  // ── Find nearby workers ──
   const handleFindWorkers = async (checkpointIndex, categories) => {
     setLoadingWorkers((prev) => ({ ...prev, [checkpointIndex]: true }));
     try {
@@ -268,7 +261,6 @@ export default function FasalPlanner() {
     }
   };
 
-  // ── Go back ──
   const handleBack = () => {
     setView('crops');
     setSelectedCrop(null);
@@ -279,26 +271,20 @@ export default function FasalPlanner() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#FAFAF7] font-sans text-gray-900 overflow-x-hidden">
-      {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-16 px-4 md:px-8 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#FDFDFD] font-sans selection:bg-slate-200 selection:text-slate-900 overflow-x-hidden">
+      
+      {/* Premium Minimalist Navbar */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100/50 h-16 px-4 md:px-8 flex justify-between items-center w-full">
+        <div className="flex items-center gap-4 max-w-6xl mx-auto w-full">
           <button
             onClick={() => navigate('/home')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-slate-50 border border-slate-200/60 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🌱</span>
-            <h1 className="font-extrabold text-[#1A6B3C] text-xl tracking-tight">{t.title}</h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 text-white flex items-center justify-center font-bold text-sm">
-            {user?.name?.charAt(0) || 'U'}
+            <Leaf className="w-5 h-5 text-indigo-500" strokeWidth={2.5} />
+            <h1 className="font-black text-slate-900 text-[15px] tracking-tight">{t.title}</h1>
           </div>
         </div>
       </header>
@@ -307,93 +293,66 @@ export default function FasalPlanner() {
       {/*  VIEW: CROP SELECTION CARDS                                     */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {view === 'crops' && (
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-8">
-          {/* Hero Section */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-[#E8F5EE] text-[#1A6B3C] px-4 py-1.5 rounded-full text-sm font-bold mb-4">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1A6B3C] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1A6B3C]"></span>
-              </span>
-              AI-Powered
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 lg:py-16">
+          <div className="mb-14 max-w-2xl animate-[fade-in-up_0.3s_ease-out]">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full bg-indigo-50 border border-indigo-100/80 text-[11px] font-black uppercase tracking-widest text-indigo-600 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" />
+              Machine Learning Engine
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">{t.subtitle}</h2>
-            <p className="text-gray-500 text-lg max-w-xl mx-auto">{t.selectCrop}</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black tracking-tighter text-slate-900 leading-[1.05] mb-5">
+              {t.subtitle}
+            </h1>
+            <p className="text-lg font-medium tracking-tight text-slate-500">
+              {t.selectCrop}
+            </p>
           </div>
 
-          {/* Error message */}
           {error && (
-            <div className="mx-auto max-w-md mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-center text-sm font-medium animate-fadeIn">
+            <div className="mb-8 flex items-center gap-3 rounded-[1.5rem] bg-rose-50 p-5 text-sm font-bold text-rose-600 border border-rose-100 shadow-sm animate-[fade-in-up_0.2s_ease-out]">
+              <Info className="h-5 w-5 flex-shrink-0" />
               {error}
             </div>
           )}
 
-          {/* Crop Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CROPS.map((crop, index) => (
               <div
                 key={crop.id}
-                className={`group relative bg-white rounded-2xl border ${crop.border} overflow-hidden
-                  transition-all duration-500 cursor-pointer hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-1
+                onClick={() => handlePlanCrop(crop)}
+                className={`group relative bg-white rounded-[2rem] border border-slate-200/60 p-6 md:p-8 overflow-hidden
+                  transition-all duration-500 cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1
                   ${animatedCards.includes(index) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
                 `}
-                style={{ transitionDelay: `${index * 60}ms` }}
-                onClick={() => handlePlanCrop(crop)}
+                style={{ transitionDelay: `${index * 50}ms` }}
               >
-                {/* Card gradient top bar */}
-                <div className={`h-1.5 bg-gradient-to-r ${crop.gradient}`} />
-
-                <div className="p-5">
-                  {/* Crop icon + name */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-14 h-14 ${crop.bg} rounded-2xl flex items-center justify-center text-3xl
-                        group-hover:scale-110 transition-transform duration-300`}
-                      >
-                        {crop.emoji}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900 leading-tight">
-                          {crop.name[language]}
-                        </h3>
-                        <span
-                          className="inline-block mt-1 px-2 py-0.5 rounded text-[11px] font-bold text-white"
-                          style={{ backgroundColor: crop.color }}
-                        >
-                          {crop.season[language]}
-                        </span>
-                      </div>
-                    </div>
-                    <svg
-                      className="w-5 h-5 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                {/* Header */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className={`w-16 h-16 ${crop.iconBg} rounded-[1.25rem] border ${crop.border} flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform duration-300`}>
+                    {crop.emoji}
                   </div>
+                  <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    {crop.season[language]}
+                  </div>
+                </div>
 
-                  {/* Description */}
-                  <p className="text-gray-500 text-sm leading-relaxed mb-4">{crop.desc[language]}</p>
+                {/* Content */}
+                <div>
+                  <h3 className="font-black text-xl text-slate-900 mb-2.5 tracking-tight group-hover:text-indigo-600 transition-colors">
+                    {crop.name[language]}
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500 leading-relaxed mb-6">
+                    {crop.desc[language]}
+                  </p>
+                </div>
 
-                  {/* Meta */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {crop.duration[language]}
-                      </span>
-                    </div>
-                    <span
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all
-                      bg-gray-100 text-gray-600 group-hover:bg-[#1A6B3C] group-hover:text-white"
-                    >
-                      {t.planNow} →
-                    </span>
+                {/* Footer details */}
+                <div className="flex items-center justify-between pt-6 border-t border-slate-100/80">
+                  <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-widest text-slate-400">
+                    <Clock className="w-3.5 h-3.5" />
+                    {crop.duration[language]}
+                  </div>
+                  <div className="flex items-center text-[13px] font-black tracking-tight text-indigo-600 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                    {t.planNow} <ArrowLeft className="w-4 h-4 ml-1 rotate-180" />
                   </div>
                 </div>
               </div>
@@ -406,28 +365,26 @@ export default function FasalPlanner() {
       {/*  VIEW: LOADING STATE                                            */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {view === 'loading' && (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          <div className="relative mb-8">
-            {/* Pulsing rings */}
-            <div className="absolute inset-0 rounded-full bg-[#1A6B3C]/10 animate-ping" style={{ animationDuration: '2s' }} />
-            <div className="absolute inset-2 rounded-full bg-[#1A6B3C]/10 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
-            <div className="relative w-24 h-24 bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-200">
-              <span className="text-4xl animate-bounce">{selectedCrop?.emoji || '🌱'}</span>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-[fade-in-up_0.3s_ease-out]">
+          <div className="relative mb-10 group">
+            <div className="absolute inset-0 rounded-[2rem] bg-indigo-500/10 blur-xl animate-pulse" style={{ animationDuration: '2s' }} />
+            <div className="relative w-24 h-24 bg-white border border-slate-200/60 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex items-center justify-center overflow-hidden">
+               <div className="absolute inset-0 bg-gradient-to-tr from-slate-50 to-white" />
+               <span className="text-4xl relative z-10 animate-bounce">{selectedCrop?.emoji || '🌱'}</span>
             </div>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{t.generating}</h3>
-          <p className="text-gray-500 text-sm max-w-xs text-center">
-            {selectedCrop?.name[language]}
+          <h3 className="text-2xl font-black tracking-tight text-slate-900 mb-3">{t.generating}</h3>
+          <p className="text-slate-500 font-medium text-sm px-6 py-2 rounded-full bg-slate-50 border border-slate-100">
+            {selectedCrop?.name[language]} Architecture
           </p>
 
-          {/* Skeleton timeline preview */}
-          <div className="mt-10 w-full max-w-md space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-4 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}>
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-gray-200 rounded-full w-3/4" />
-                  <div className="h-2 bg-gray-100 rounded-full w-1/2" />
+          <div className="mt-12 w-full max-w-md space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-5 p-4 rounded-3xl bg-white border border-slate-100/50 shadow-sm opacity-50 animate-pulse" style={{ animationDelay: `${i * 0.15}s` }}>
+                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex-shrink-0" />
+                <div className="flex-1 space-y-2.5">
+                  <div className="h-2.5 bg-slate-200 rounded-full w-2/3" />
+                  <div className="h-2 bg-slate-100 rounded-full w-1/3" />
                 </div>
               </div>
             ))}
@@ -439,190 +396,196 @@ export default function FasalPlanner() {
       {/*  VIEW: ROADMAP                                                  */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {view === 'roadmap' && roadmap && (
-        <div ref={roadmapRef} className="max-w-4xl mx-auto px-4 md:px-6 py-6 pb-24">
-          {/* Back button */}
+        <div ref={roadmapRef} className="max-w-4xl mx-auto px-4 md:px-6 py-10 pb-32 animate-[fade-in-up_0.4s_ease-out]">
+          
+          {/* Header Action */}
           <button
             onClick={handleBack}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-[#1A6B3C] mb-6 transition-colors"
+            className="flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-bold tracking-tight text-slate-500 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 mb-8"
           >
+            <ArrowLeft className="h-4 w-4" />
             {t.back}
           </button>
 
-          {/* Roadmap Header Card */}
-          <div
-            className="relative overflow-hidden rounded-2xl p-6 md:p-8 mb-8 text-white"
-            style={{
-              background: `linear-gradient(135deg, ${selectedCrop?.color || '#1A6B3C'}dd, ${selectedCrop?.color || '#1A6B3C'}88)`,
-            }}
-          >
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-4xl">{selectedCrop?.emoji}</span>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                    {roadmap.cropName || selectedCrop?.name[language]}
-                  </h2>
-                  <p className="text-white/80 text-sm mt-1">{roadmap.summary}</p>
-                </div>
+          {/* Epic Roadmap Hero Card */}
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 mb-12 shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col items-center text-center p-10 md:p-14">
+            {/* Subtle mesh background effect inside dark card */}
+             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+             
+            <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
+              <div className="w-20 h-20 bg-white/10 rounded-[1.5rem] flex items-center justify-center text-4xl mb-6 shadow-inner backdrop-blur-md border border-white/10">
+                {selectedCrop?.emoji}
               </div>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white mb-4 line-clamp-2 leading-[1.1]">
+                {roadmap.cropName || selectedCrop?.name[language]}
+              </h2>
+              <p className="text-slate-400 font-medium text-lg leading-relaxed mb-10">
+                {roadmap.summary}
+              </p>
 
-              {/* Stats row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+              {/* Data Pills Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
                 {[
-                  { label: t.totalDuration, value: roadmap.totalDuration, icon: '⏱️' },
-                  { label: t.bestSeason, value: roadmap.bestSeason, icon: '🌤️' },
-                  { label: t.costPerAcre, value: roadmap.estimatedCostPerAcre, icon: '💰' },
-                  { label: t.yieldPerAcre, value: roadmap.expectedYieldPerAcre, icon: '📦' },
-                ].map((stat, i) => (
-                  <div
-                    key={i}
-                    className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/10"
-                  >
-                    <span className="text-lg">{stat.icon}</span>
-                    <p className="text-white/70 text-[11px] font-medium mt-1 uppercase tracking-wider">{stat.label}</p>
-                    <p className="font-bold text-sm mt-0.5">{stat.value || '-'}</p>
-                  </div>
-                ))}
+                  { label: t.totalDuration, value: roadmap.totalDuration, icon: Clock },
+                  { label: t.bestSeason, value: roadmap.bestSeason, icon: Calendar },
+                  { label: t.costPerAcre, value: roadmap.estimatedCostPerAcre, icon: Banknote },
+                  { label: t.yieldPerAcre, value: roadmap.expectedYieldPerAcre, icon: Package },
+                ].map((stat, i) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center text-center backdrop-blur-sm transition-colors hover:bg-white/10">
+                      <Icon className="w-5 h-5 text-slate-300 mb-2" strokeWidth={2.5}/>
+                      <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
+                      <p className="text-white font-bold tracking-tight text-sm">{stat.value || '-'}</p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* ── TIMELINE ──────────────────────────────────────────── */}
-          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-[#1A6B3C] rounded-full" />
-            {t.roadmapTitle}
-          </h3>
+          <div className="mb-10 flex items-center justify-between">
+             <h3 className="text-2xl font-black tracking-tighter text-slate-900">
+               {t.roadmapTitle}
+             </h3>
+             <div className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[11px] font-black uppercase tracking-widest">
+                {roadmap.checkpoints?.length} Phases
+             </div>
+          </div>
 
+          {/* Structured Timeline Sequence */}
           <div className="relative">
-            {/* Vertical timeline line */}
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#1A6B3C] via-emerald-300 to-gray-200" />
+            {/* The crisp gray spine line tracking down */}
+            <div className="absolute left-[29px] top-6 bottom-8 w-[2px] bg-slate-100 rounded-full" />
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {(roadmap.checkpoints || []).map((cp, idx) => {
                 const isExpanded = expandedCheckpoint === idx;
                 const workers = workerData[idx];
                 const isLoadingW = loadingWorkers[idx];
 
                 return (
-                  <div key={idx} className="relative pl-16 group">
-                    {/* Timeline dot */}
+                  <div key={idx} className="relative group pl-[70px]">
+                    {/* Minimalist marker node */}
                     <div
-                      className={`absolute left-4 w-5 h-5 rounded-full border-[3px] transition-all duration-300 flex items-center justify-center
+                      className={`absolute left-5 w-6 h-6 rounded-full border-[3px] transition-all duration-300 flex items-center justify-center top-6 z-10
                         ${isExpanded
-                          ? 'bg-[#1A6B3C] border-[#1A6B3C] scale-125 shadow-lg shadow-green-200'
-                          : 'bg-white border-[#1A6B3C]/40 group-hover:border-[#1A6B3C] group-hover:scale-110'
+                          ? 'bg-indigo-600 border-white ring-4 ring-indigo-50 shadow-sm scale-110'
+                          : 'bg-white border-slate-200 group-hover:border-slate-400 group-hover:scale-105'
                         }`}
-                      style={{ top: '1.25rem' }}
-                    >
-                      {isExpanded && (
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                      )}
-                    </div>
+                    />
 
-                    {/* Checkpoint Card */}
+                    {/* Bento Checkpoint Block */}
                     <div
-                      className={`bg-white rounded-2xl border overflow-hidden transition-all duration-300 cursor-pointer
+                      className={`bg-white rounded-[2rem] border transition-all duration-300 overflow-hidden cursor-pointer
                         ${isExpanded
-                          ? 'border-[#1A6B3C]/30 shadow-[0_10px_40px_rgba(26,107,60,0.1)]'
-                          : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
+                          ? 'border-indigo-100 shadow-[0_10px_40px_rgba(79,70,229,0.06)]'
+                          : 'border-slate-200/60 shadow-sm hover:border-slate-300 hover:shadow-md'
                         }`}
                       onClick={() => setExpandedCheckpoint(isExpanded ? null : idx)}
                     >
-                      {/* Card Header */}
-                      <div className="p-4 md:p-5">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3 flex-1">
-                            <span className="text-2xl mt-0.5">{cp.icon || '📌'}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span className="px-2 py-0.5 bg-[#E8F5EE] text-[#1A6B3C] rounded text-[11px] font-bold uppercase tracking-wider">
+                      {/* Block Header */}
+                      <div className="p-6 md:p-8">
+                        <div className="flex items-start justify-between gap-4">
+                           <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isExpanded ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'}`}>
                                   {cp.weekRange || `Week ${cp.week}`}
                                 </span>
-                                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[11px] font-bold">
+                                <span className="px-2.5 py-1 bg-slate-50 border border-slate-100/50 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest">
                                   {cp.phase}
                                 </span>
                               </div>
-                              <h4 className="font-bold text-[15px] text-gray-900">{cp.title}</h4>
-                              <p className="text-gray-500 text-sm mt-1 line-clamp-2">{cp.description}</p>
-                            </div>
-                          </div>
-
-                          <svg
-                            className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300 mt-1 ${isExpanded ? 'rotate-180' : ''}`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
+                              <h4 className="font-black text-[18px] tracking-tight text-slate-900 leading-snug">{cp.title}</h4>
+                              <p className={`text-sm mt-2 font-medium transition-all ${isExpanded ? 'text-slate-600' : 'text-slate-500 line-clamp-2'}`}>{cp.description}</p>
+                           </div>
+                           <div className={`flex w-9 h-9 items-center justify-center rounded-full border transition-all ${isExpanded ? 'bg-slate-50 border-slate-200' : 'bg-transparent border-slate-100 group-hover:bg-slate-50'}`}>
+                             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                           </div>
                         </div>
                       </div>
 
-                      {/* Expanded Content */}
+                      {/* Expanded Sub-pane Data */}
                       {isExpanded && (
-                        <div className="border-t border-gray-100 animate-fadeIn">
-                          {/* Tasks */}
+                        <div className="border-t border-slate-100 bg-slate-50/30 animate-[fade-in-up_0.3s_ease-out]">
+                          
+                          {/* Core Tasks Subgrid */}
                           {cp.tasks && cp.tasks.length > 0 && (
-                            <div className="p-4 md:p-5 border-b border-gray-50">
-                              <h5 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-5 h-5 bg-[#E8F5EE] rounded flex items-center justify-center text-xs">✓</span>
+                            <div className="p-6 md:p-8 border-b border-slate-100/80">
+                              <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-slate-300" />
                                 {t.tasksLabel}
                               </h5>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-4">
                                 {cp.tasks.map((task, tIdx) => (
-                                  <div key={tIdx} className="flex items-start gap-2 text-sm text-gray-600">
-                                    <span className="text-[#1A6B3C] mt-0.5 text-xs">●</span>
-                                    <span>{task}</span>
-                                  </div>
+                                  <li key={tIdx} className="flex items-start gap-3">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 flex-shrink-0" />
+                                    <span className="text-sm font-medium text-slate-700 leading-relaxed">{task}</span>
+                                  </li>
                                 ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Inputs Table Pane */}
+                          {cp.inputsRequired && cp.inputsRequired.length > 0 && (
+                            <div className="p-6 md:p-8 border-b border-slate-100/80">
+                              <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                                <Package className="w-4 h-4 text-slate-300" />
+                                {t.inputsLabel}
+                              </h5>
+                              <div className="rounded-2xl border border-slate-200/60 overflow-hidden bg-white">
+                                <table className="w-full text-sm text-left">
+                                  <thead className="bg-slate-50 border-b border-slate-100">
+                                    <tr>
+                                      <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t.item}</th>
+                                      <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t.qty}</th>
+                                      <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">{t.cost}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-50">
+                                    {cp.inputsRequired.map((inp, iIdx) => (
+                                      <tr key={iIdx}>
+                                        <td className="px-5 py-3.5 font-bold text-slate-700">{inp.item}</td>
+                                        <td className="px-5 py-3.5 font-medium text-slate-500">{inp.quantity}</td>
+                                        <td className="px-5 py-3.5 font-bold text-slate-900 text-right">{inp.estimatedCost}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
                               </div>
                             </div>
                           )}
 
-                          {/* Workers Needed */}
+                          {/* Labour Match Pane (Advanced) */}
                           {cp.workersNeeded && cp.workersNeeded.length > 0 && (
-                            <div className="p-4 md:p-5 border-b border-gray-50 bg-amber-50/30">
-                              <h5 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-5 h-5 bg-amber-100 rounded flex items-center justify-center text-xs">👷</span>
+                            <div className="p-6 md:p-8 bg-blue-50/30 border-b border-slate-100/80">
+                               <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                                <Users className="w-4 h-4 text-slate-300" />
                                 {t.workersLabel}
                               </h5>
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 {cp.workersNeeded.map((w, wIdx) => (
-                                  <div
-                                    key={wIdx}
-                                    className="flex items-center justify-between bg-white rounded-xl p-3 border border-amber-100"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center text-lg">
-                                        {w.role?.includes('tractor') || w.category?.includes('machine')
-                                          ? '🚜'
-                                          : w.role?.includes('spray') || w.category?.includes('pesticide')
-                                          ? '🧪'
-                                          : w.role?.includes('irrigat') || w.category?.includes('irrigat')
-                                          ? '💧'
-                                          : '🧑‍🌾'}
-                                      </div>
-                                      <div>
-                                        <p className="font-semibold text-sm text-gray-900 capitalize">
-                                          {(w.role || w.category || '').replace(/_/g, ' ')}
-                                        </p>
-                                        <p className="text-xs text-gray-400">
-                                          {w.count} {language === 'kn' ? 'ಜನ' : 'workers'} × {w.daysNeeded} {t.daysNeeded}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <span className="text-sm font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg">
-                                      {w.ratePerDay} {t.ratePerDay}
-                                    </span>
+                                  <div key={wIdx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-[1.5rem] p-5 border border-slate-200/60 shadow-sm">
+                                     <div className="flex items-center gap-4">
+                                       <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-xl shadow-inner">
+                                         {w.role?.includes('tractor') || w.category?.includes('machine') ? '🚜' : w.role?.includes('spray') ? '🧪' : '🧑‍🌾'}
+                                       </div>
+                                       <div>
+                                         <p className="font-bold text-base text-slate-900 capitalize tracking-tight">{(w.role || w.category || '').replace(/_/g, ' ')}</p>
+                                         <p className="text-[13px] font-medium text-slate-500">
+                                            {w.count} limit × {w.daysNeeded} {t.daysNeeded}
+                                         </p>
+                                       </div>
+                                     </div>
+                                     <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Rate</p>
+                                       <p className="text-sm font-black text-slate-900">{w.ratePerDay}{t.ratePerDay}</p>
+                                     </div>
                                   </div>
                                 ))}
                               </div>
 
-                              {/* Find Nearby Workers Button */}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -630,61 +593,49 @@ export default function FasalPlanner() {
                                   handleFindWorkers(idx, cats);
                                 }}
                                 disabled={isLoadingW}
-                                className="mt-4 w-full flex items-center justify-center gap-2 bg-[#1A6B3C] text-white font-bold text-sm py-3 rounded-xl
-                                  hover:bg-[#145530] active:scale-[0.98] transition-all shadow-sm disabled:opacity-50"
+                                className="mt-5 w-full flex items-center justify-center gap-2 bg-slate-900 text-white font-bold text-sm py-4 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all shadow-[0_8px_20px_rgba(0,0,0,0.1)] disabled:opacity-50 tracking-tight"
                               >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {isLoadingW
-                                  ? <>{t.loading}<LoadingDots /></>
-                                  : t.findWorkers
-                                }
+                                {isLoadingW ? (
+                                   <><span className="w-4 h-4 rounded-full border-2 border-slate-500 border-t-white animate-spin" /> {t.loading}</>
+                                ) : (
+                                   <><Search className="w-4 h-4" /> {t.findWorkers}</>
+                                )}
                               </button>
 
-                              {/* Nearby Workers List */}
                               {workers !== undefined && (
-                                <div className="mt-4 space-y-2 animate-fadeIn">
-                                  <h6 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    {t.nearbyWorkers}
+                                <div className="mt-6 space-y-3 animate-[fade-in-up_0.3s_ease-out]">
+                                  <h6 className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1 mb-2">
+                                    {t.nearbyWorkers} Results
                                   </h6>
                                   {workers.length === 0 ? (
-                                    <p className="text-sm text-gray-400 text-center py-4 bg-white rounded-xl border border-dashed border-gray-200">
-                                      {t.noWorkers}
-                                    </p>
+                                    <div className="px-6 py-8 bg-white rounded-[1.5rem] border border-dashed border-slate-200 text-center">
+                                      <p className="text-sm font-bold text-slate-500">{t.noWorkers}</p>
+                                    </div>
                                   ) : (
                                     workers.map((wk, wkIdx) => (
-                                      <div
-                                        key={wkIdx}
-                                        className="flex items-center gap-3 bg-white rounded-xl p-3 border border-gray-100 hover:border-[#1A6B3C]/20 transition-colors"
-                                      >
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                      <div key={wkIdx} className="flex items-center gap-4 bg-white rounded-[1.5rem] p-5 border border-slate-200/60 transition-all hover:border-slate-300 shadow-sm">
+                                        <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-black text-lg border border-slate-200 flex-shrink-0">
                                           {wk.name?.charAt(0) || '?'}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <p className="font-bold text-sm text-gray-900 truncate">{wk.name}</p>
-                                          <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                                            <span>📍 {wk.distanceKm} {t.workerDistance}</span>
-                                            {wk.location?.village && <span>· {wk.location.village}</span>}
-                                          </div>
-                                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                            {(wk.categoryLabels || []).slice(0, 2).map((cl, clIdx) => (
-                                              <span key={clIdx} className="px-1.5 py-0.5 bg-[#E8F5EE] text-[#1A6B3C] rounded text-[10px] font-medium">
-                                                {cl}
-                                              </span>
-                                            ))}
-                                          </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                          {wk.rating?.average > 0 && (
-                                            <p className="text-sm font-bold text-gray-900">
-                                              ⭐ {wk.rating.average.toFixed(1)}
-                                            </p>
-                                          )}
-                                          <p className="text-[11px] text-gray-400">
-                                            {wk.totalJobsCompleted || 0} {t.jobsDone}
-                                          </p>
+                                           <div className="flex items-center justify-between mb-1">
+                                             <p className="font-bold text-base text-slate-900 truncate tracking-tight">{wk.name}</p>
+                                             {wk.rating?.average > 0 && (
+                                               <p className="flex items-center gap-1 text-[13px] font-black text-slate-900 bg-amber-50 px-2 py-0.5 rounded-md">
+                                                 <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> {wk.rating.average.toFixed(1)}
+                                               </p>
+                                             )}
+                                           </div>
+                                           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 mb-2">
+                                             <MapPin className="w-3.5 h-3.5" /> {wk.distanceKm} {t.workerDistance} {wk.location?.village && `· ${wk.location.village}`}
+                                           </div>
+                                           <div className="flex flex-wrap gap-2">
+                                              {(wk.categoryLabels || []).slice(0, 2).map((cl, clIdx) => (
+                                                <span key={clIdx} className="px-2 py-1 bg-slate-50 border border-slate-100 text-slate-600 rounded drop-shadow-sm text-[10px] font-black uppercase tracking-widest">
+                                                  {cl}
+                                                </span>
+                                              ))}
+                                           </div>
                                         </div>
                                       </div>
                                     ))
@@ -694,44 +645,16 @@ export default function FasalPlanner() {
                             </div>
                           )}
 
-                          {/* Inputs Required */}
-                          {cp.inputsRequired && cp.inputsRequired.length > 0 && (
-                            <div className="p-4 md:p-5 border-b border-gray-50">
-                              <h5 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-5 h-5 bg-blue-50 rounded flex items-center justify-center text-xs">📦</span>
-                                {t.inputsLabel}
-                              </h5>
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                  <thead>
-                                    <tr className="text-left text-xs text-gray-400 uppercase tracking-wider">
-                                      <th className="pb-2 font-semibold">{t.item}</th>
-                                      <th className="pb-2 font-semibold">{t.qty}</th>
-                                      <th className="pb-2 font-semibold text-right">{t.cost}</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-gray-50">
-                                    {cp.inputsRequired.map((inp, iIdx) => (
-                                      <tr key={iIdx}>
-                                        <td className="py-2 text-gray-700 font-medium">{inp.item}</td>
-                                        <td className="py-2 text-gray-500">{inp.quantity}</td>
-                                        <td className="py-2 text-gray-700 font-semibold text-right">{inp.estimatedCost}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Pro Tip */}
+                          {/* Quick Pro Tip */}
                           {cp.tips && (
-                            <div className="p-4 md:p-5 bg-gradient-to-r from-emerald-50 to-teal-50">
-                              <div className="flex items-start gap-3">
-                                <span className="text-lg mt-0.5">💡</span>
+                            <div className="p-6 md:p-8 bg-indigo-50/30">
+                              <div className="flex gap-4 p-5 rounded-2xl bg-white border border-indigo-100/50 shadow-sm">
+                                <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                   <Sparkles className="w-4 h-4" />
+                                </span>
                                 <div>
-                                  <h5 className="text-sm font-bold text-[#1A6B3C] mb-1">{t.tipsLabel}</h5>
-                                  <p className="text-sm text-gray-600 leading-relaxed">{cp.tips}</p>
+                                  <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-1">{t.tipsLabel}</h5>
+                                  <p className="text-[13px] font-bold tracking-tight text-slate-700 leading-relaxed">{cp.tips}</p>
                                 </div>
                               </div>
                             </div>
@@ -743,59 +666,28 @@ export default function FasalPlanner() {
                 );
               })}
 
-              {/* End marker */}
-              <div className="relative pl-16">
-                <div
-                  className="absolute left-4 w-5 h-5 rounded-full bg-gradient-to-tr from-[#1A6B3C] to-emerald-500 border-2 border-white shadow-lg flex items-center justify-center"
-                  style={{ top: '0.25rem' }}
-                >
-                  <span className="text-[8px]">✓</span>
-                </div>
-                <div className="bg-[#E8F5EE] rounded-xl p-4 border border-[#1A6B3C]/10">
-                  <p className="font-bold text-[#1A6B3C] text-sm">
-                    🎉 {language === 'kn' ? 'ಬೆಳೆ ಯೋಜನೆ ಸಂಪೂರ್ಣ!' : 'Crop Plan Complete!'}
-                  </p>
-                  <p className="text-gray-500 text-xs mt-1">
-                    {language === 'kn'
-                      ? 'ಶುಭಕಾಮನೆಗಳು! ಉತ್ತಮ ಫಸಲು ಪಡೆಯಿರಿ.'
-                      : 'Best wishes for a bountiful harvest!'}
-                  </p>
-                </div>
+              {/* End sequence finisher */}
+              <div className="relative pl-[70px] pt-4">
+                 <div
+                   className="absolute left-[13px] w-9 h-9 rounded-full bg-slate-900 border-4 border-[#FDFDFD] shadow-sm flex items-center justify-center top-3 z-10"
+                 >
+                   <CheckCircle2 className="w-4 h-4 text-white" />
+                 </div>
+                 <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p className="font-black tracking-tight text-slate-900 text-lg">
+                        Plan Complete!
+                      </p>
+                      <p className="text-slate-500 text-sm font-medium mt-0.5">
+                        Follow the sequential steps to ensure high yield.
+                      </p>
+                    </div>
+                 </div>
               </div>
             </div>
           </div>
-
-          {/* Retry button */}
-          <div className="mt-8 text-center">
-            <button
-              onClick={() => handlePlanCrop(selectedCrop)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:border-[#1A6B3C] hover:text-[#1A6B3C] transition-all"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {language === 'kn' ? 'ಮತ್ತೆ ಯೋಜನೆ ರಚಿಸಿ' : 'Regenerate Plan'}
-            </button>
-          </div>
         </div>
       )}
-
-      {/* ── CUSTOM CSS ────────────────────────────────────────────── */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.35s ease-out;
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
     </div>
   );
 }
