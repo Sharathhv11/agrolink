@@ -27,3 +27,11 @@ export function deleteJob(jobId, token) {
 export function applyJob(jobId, token) {
   return apiRequest(`/jobs/${jobId}/apply`, { method: 'POST', token });
 }
+
+export function getJobApplications(jobId, token) {
+  return apiRequest(`/jobs/${jobId}/applications`, { method: 'GET', token });
+}
+
+export function acceptJobApplication(jobId, workerId, token) {
+  return apiRequest(`/jobs/${jobId}/applications/${workerId}/accept`, { method: 'POST', token });
+}

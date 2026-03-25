@@ -72,6 +72,49 @@ function validateCreateJob(body) {
   return errors;
 }
 
+function computeJobExpiryAt(job) {
+  if (!job?.startDate || !Number.isFinite(job?.durationValue) || !job?.durationType) return null;
+  const base = new Date(job.startDate).getTime();
+  if (!Number.isFinite(base)) return null;
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const msPerHour = 60 * 60 * 1000;
+  const durationMs = job.durationType === 'hours' ? job.durationValue * msPerHour : job.durationValue * msPerDay;
+  return new Date(base + durationMs);
+}
+
+async function getSelectedCount(jobId) {
+  return JobApplication.countDocuments({
+    jobId,
+    status: { $in: ['shortlisted', 'hired'] },
+  });
+}
+
+async function maybeCloseJob(job) {
+  if (!job) return { status: null, reason: null };
+  if (job.status !== 'open') {
+    const reason = job.status === 'filled' ? 'Workers requirement fulfilled' : job.status === 'closed' ? 'Job expired' : null;
+    return { status: job.status, reason };
+  }
+
+  const expiryAt = computeJobExpiryAt(job);
+  const selectedCount = await getSelectedCount(job._id);
+
+  if (selectedCount >= job.workersRequired) {
+    job.status = 'filled';
+    await job.save();
+    return { status: job.status, reason: 'Workers requirement fulfilled' };
+  }
+
+  if (expiryAt && Date.now() > expiryAt.getTime()) {
+    job.status = 'closed';
+    await job.save();
+    return { status: job.status, reason: 'Job expired' };
+  }
+
+  return { status: job.status, reason: null };
+}
+
 router.post('/', protect, async (req, res) => {
   try {
     if (!isFarmer(req.user)) {
@@ -287,6 +330,107 @@ router.get('/:jobId/workers.pdf', protect, async (req, res) => {
     return res.send(buffer);
   } catch (error) {
     return res.status(500).json({ message: error.message || 'Failed to generate PDF' });
+  }
+});
+
+// Farmer dashboard: list who applied and who is selected/shortlisted
+router.get('/:jobId/applications', protect, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+    if (String(job.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'Not allowed' });
+    }
+
+    const { status, reason } = await maybeCloseJob(job);
+    const expiryAt = computeJobExpiryAt(job);
+    const selectedCount = await getSelectedCount(job._id);
+
+    const appliedApps = await JobApplication.find({ jobId: job._id, status: 'applied' })
+      .sort({ createdAt: -1 })
+      .populate('workerId', 'name phone location language');
+
+    const selectedApps = await JobApplication.find({
+      jobId: job._id,
+      status: { $in: ['shortlisted', 'hired'] },
+    })
+      .sort({ createdAt: -1 })
+      .populate('workerId', 'name phone location language');
+
+    return res.json({
+      job: {
+        jobId: job._id,
+        status,
+        workersRequired: job.workersRequired,
+        selectedCount,
+        expiryAt,
+        closeReason: reason,
+      },
+      applied: appliedApps.map((a) => ({
+        applicationId: a._id,
+        worker: a.workerId,
+        appliedAt: a.createdAt,
+      })),
+      selected: selectedApps.map((a) => ({
+        applicationId: a._id,
+        worker: a.workerId,
+        selectedAt: a.createdAt,
+        applicationStatus: a.status,
+      })),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to fetch applications' });
+  }
+});
+
+router.post('/:jobId/applications/:workerId/accept', protect, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+    if (String(job.createdBy) !== String(req.user._id)) return res.status(403).json({ message: 'Not allowed' });
+
+    await maybeCloseJob(job);
+    if (job.status !== 'open') {
+      return res.status(400).json({ message: 'Job is closed/expired' });
+    }
+
+    const workerId = req.params.workerId;
+
+    const existingApplication = await JobApplication.findOne({
+      jobId: job._id,
+      workerId,
+      status: 'applied',
+    });
+
+    if (!existingApplication) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const selectedCount = await getSelectedCount(job._id);
+    if (selectedCount >= job.workersRequired) {
+      // Defensive: race condition
+      job.status = 'filled';
+      await job.save();
+      return res.status(400).json({ message: 'Worker requirement already fulfilled' });
+    }
+
+    await JobApplication.updateOne(
+      { _id: existingApplication._id },
+      { $set: { status: 'shortlisted' } }
+    );
+
+    await maybeCloseJob(job);
+    const updatedSelectedCount = await getSelectedCount(job._id);
+
+    return res.json({
+      success: true,
+      jobStatus: job.status,
+      selectedCount: updatedSelectedCount,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to accept application' });
   }
 });
 
