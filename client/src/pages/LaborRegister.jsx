@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, CheckCircle2, User, Phone, MapPin, Building2, Map, Loader2, Sparkles } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -307,16 +308,23 @@ const LaborRegister = () => {
   /* ─── SUCCESS SCREEN ─── */
   if (status === 'success') {
     return (
-      <div style={styles.page}>
-        <div style={styles.successContainer}>
-          <div style={styles.successIcon}>✅</div>
-          <h1 style={styles.successTitle}>Registration Successful!</h1>
-          <p style={styles.successText}>
-            You will receive job updates via SMS on your registered phone number.
+      <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6 selection:bg-blue-100 selection:text-blue-900 font-sans">
+        <div className="max-w-md w-full bg-white rounded-[2rem] border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 text-center animate-[fade-in-up_0.5s_ease-out]">
+          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 flex items-center justify-center mb-6 shadow-inner ring-[6px] ring-emerald-50">
+             <CheckCircle2 className="w-10 h-10" />
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-3">Registration Successful!</h1>
+          <p className="text-slate-500 font-medium leading-relaxed mb-3">
+             You will now receive automatic job updates directly via SMS.
           </p>
-          <p style={styles.successSubtext}>ನೋಂದಣಿ ಯಶಸ್ವಿ! SMS ಮೂಲಕ ಕೆಲಸದ ವಿವರಗಳನ್ನು ಪಡೆಯುತ್ತೀರಿ.</p>
-          <button style={styles.backBtn} onClick={() => navigate('/')}>
-            ← Back to Home
+          <p className="text-sm font-semibold text-slate-400 mb-8 tracking-wide">
+             ನೋಂದಣಿ ಯಶಸ್ವಿ! SMS ಮೂಲಕ ಕೆಲಸದ ವಿವರಗಳನ್ನು ಪಡೆಯುತ್ತೀರಿ.
+          </p>
+          <button 
+            onClick={() => navigate('/')} 
+            className="w-full py-4 rounded-2xl font-bold bg-slate-900 text-white hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-[0.98]"
+          >
+             Return Home
           </button>
         </div>
       </div>
@@ -325,396 +333,185 @@ const LaborRegister = () => {
 
   /* ─── REGISTRATION FORM ─── */
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <header style={styles.header}>
-        <button style={styles.headerBack} onClick={() => navigate('/')}>←</button>
-        <div>
-          <h1 style={styles.headerTitle}>Worker Registration</h1>
-          <p style={styles.headerSub}>ಕಾರ್ಮಿಕ ನೋಂದಣಿ</p>
-        </div>
-      </header>
-
-      <form onSubmit={handleSubmit} style={styles.form}>
-        {/* Name */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            Full Name <span style={styles.labelKn}>ಹೆಸರು</span>
-          </label>
-          <input
-            id="labor-name"
-            type="text"
-            required
-            placeholder="Enter your full name"
-            value={form.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            style={styles.input}
-          />
-        </div>
-
-        {/* Phone */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            Phone Number <span style={styles.labelKn}>ಫೋನ್ ಸಂಖ್ಯೆ</span>
-          </label>
-          <div style={styles.phoneRow}>
-            <span style={styles.phonePrefix}>+91</span>
-            <input
-              id="labor-phone"
-              type="tel"
-              required
-              placeholder="98765 43210"
-              maxLength={10}
-              value={form.phone}
-              onChange={(e) => handleChange('phone', e.target.value.replace(/\D/g, ''))}
-              style={{ ...styles.input, ...styles.phoneInput }}
-            />
-          </div>
-          {phoneError && <p style={styles.fieldError}>{phoneError}</p>}
-        </div>
-
-        {/* State (locked to Karnataka) */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            State <span style={styles.labelKn}>ರಾಜ್ಯ</span>
-          </label>
-          <select
-            id="labor-state"
-            value={form.state}
-            onChange={(e) => handleChange('state', e.target.value)}
-            style={styles.select}
-          >
-            {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-
-        {/* District */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            District <span style={styles.labelKn}>ಜಿಲ್ಲೆ</span>
-          </label>
-          <select
-            id="labor-district"
-            required
-            value={form.district}
-            onChange={(e) => handleChange('district', e.target.value)}
-            style={styles.select}
-          >
-            <option value="">-- Select District --</option>
-            {districts.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-
-        {/* Taluk */}
-        <div style={styles.field}>
-          <label style={styles.label}>
-            Taluk <span style={styles.labelKn}>ತಾಲ್ಲೂಕು</span>
-          </label>
-          <select
-            id="labor-taluk"
-            required
-            value={form.taluk}
-            onChange={(e) => handleChange('taluk', e.target.value)}
-            style={styles.select}
-            disabled={!form.district}
-          >
-            <option value="">-- Select Taluk --</option>
-            {taluks.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-
-        {/* Error message */}
-        {status === 'error' && (
-          <div style={styles.errorBanner}>
-            <span>⚠️</span> {errorMsg}
-          </div>
-        )}
-
-        {/* Submit */}
-        <button
-          id="labor-submit"
-          type="submit"
-          disabled={status === 'loading'}
-          style={{
-            ...styles.submitBtn,
-            ...(status === 'loading' ? styles.submitBtnDisabled : {}),
-          }}
+    <div className="min-h-screen bg-[#FDFDFD] font-sans selection:bg-blue-100 selection:text-blue-900 flex flex-col pt-12 pb-16 px-5 sm:px-8">
+      
+      <div className="w-full max-w-xl mx-auto flex flex-col">
+        {/* HEADER */}
+        <button 
+           onClick={() => navigate('/')} 
+           className="self-start mb-8 p-3 bg-white border border-slate-200/80 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-50 hover:shadow-sm transition-all shadow-[0_4px_15px_rgb(0,0,0,0.02)] active:scale-95"
         >
-          {status === 'loading' ? (
-            <span style={styles.loadingText}>
-              <span style={styles.spinner}></span> Registering...
-            </span>
-          ) : (
-            'Register Now →'
-          )}
+          <ArrowLeft className="w-5 h-5" />
         </button>
 
-        <p style={styles.note}>
-          📱 After registration, you will receive job alerts via SMS.
-          <br />
-          <span style={styles.noteKn}>ನೋಂದಣಿ ನಂತರ SMS ಮೂಲಕ ಕೆಲಸದ ಮಾಹಿತಿ ಬರುತ್ತದೆ.</span>
-        </p>
-      </form>
+        <div className="mb-10 text-center animate-[fade-in-up_0.4s_ease-out]">
+           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/50 border border-blue-100 text-sm font-bold text-blue-700 mb-5 shadow-sm">
+             <Sparkles className="w-4 h-4 text-blue-600" /> Waitlist Open
+           </div>
+           <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-3 leading-[1.1]">Join the Labor Network</h1>
+           <p className="text-lg font-medium text-slate-500 tracking-tight">ಕಾರ್ಮಿಕ ನೋಂದಣಿ (ಸರಳ)</p>
+        </div>
 
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-      `}</style>
+        {/* FORM CONTAINER */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-[2rem] border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-10 animate-[fade-in-up_0.6s_ease-out]">
+          <div className="space-y-6">
+            
+            {/* FULL NAME */}
+            <div>
+              <label className="flex items-center gap-2 mb-2">
+                <span className="font-bold text-[15px] text-slate-900 tracking-tight">Full Name</span>
+                <span className="text-xs font-semibold text-slate-400">ಹೆಸರು</span>
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                   <User className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter your full name"
+                  value={form.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  className="w-full bg-slate-50/50 border-2 border-slate-200 focus:bg-white focus:border-blue-500 rounded-2xl py-3.5 pl-12 pr-4 font-semibold text-slate-900 placeholder:text-slate-400 outline-none transition-all shadow-inner focus:ring-4 focus:ring-blue-500/10"
+                />
+              </div>
+            </div>
+
+            {/* PHONE */}
+            <div>
+              <label className="flex items-center gap-2 mb-2">
+                <span className="font-bold text-[15px] text-slate-900 tracking-tight">Phone Number</span>
+                <span className="text-xs font-semibold text-slate-400">ಫೋನ್ ಸಂಖ್ಯೆ</span>
+              </label>
+              <div className="flex rounded-2xl border-2 border-slate-200 bg-slate-50/50 focus-within:bg-white focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 shadow-inner overflow-hidden transition-all">
+                <div className="flex items-center justify-center bg-transparent pl-4 pr-3 border-r border-slate-200">
+                   <Phone className="w-5 h-5 text-slate-400" />
+                   <span className="ml-2 font-bold text-slate-500">+91</span>
+                </div>
+                <input
+                  type="tel"
+                  required
+                  placeholder="98765 43210"
+                  maxLength={10}
+                  value={form.phone}
+                  onChange={(e) => handleChange('phone', e.target.value.replace(/\D/g, ''))}
+                  className="w-full py-3.5 px-4 font-bold tracking-wide text-slate-900 placeholder:text-slate-400 outline-none bg-transparent"
+                />
+              </div>
+              {phoneError && <p className="text-[13px] text-red-500 font-bold mt-2 ml-1 animate-[fade-in-up_0.2s]">{phoneError}</p>}
+            </div>
+
+            {/* STATE (LOCKED) */}
+            <div>
+              <label className="flex items-center gap-2 mb-2">
+                <span className="font-bold text-[15px] text-slate-900 tracking-tight">State</span>
+                <span className="text-xs font-semibold text-slate-400">ರಾಜ್ಯ</span>
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                   <Map className="w-5 h-5" />
+                </div>
+                <select
+                  value={form.state}
+                  onChange={(e) => handleChange('state', e.target.value)}
+                  className="w-full bg-slate-50/50 hover:bg-slate-100/50 border-2 border-slate-200 focus:bg-white focus:border-blue-500 rounded-2xl py-3.5 pl-12 pr-10 font-semibold text-slate-900 outline-none transition-all shadow-inner appearance-none cursor-pointer"
+                >
+                  {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 flex-col sm:flex-row">
+               {/* DISTRICT */}
+               <div className="flex-1">
+                 <label className="flex items-center gap-2 mb-2">
+                   <span className="font-bold text-[15px] text-slate-900 tracking-tight">District</span>
+                   <span className="text-xs font-semibold text-slate-400">ಜಿಲ್ಲೆ</span>
+                 </label>
+                 <div className="relative">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Building2 className="w-5 h-5" />
+                   </div>
+                   <select
+                     required
+                     value={form.district}
+                     onChange={(e) => handleChange('district', e.target.value)}
+                     className="w-full bg-slate-50/50 hover:bg-slate-100/50 border-2 border-slate-200 focus:bg-white focus:border-blue-500 rounded-2xl py-3.5 pl-12 pr-10 font-semibold text-slate-900 outline-none transition-all shadow-inner appearance-none cursor-pointer"
+                   >
+                     <option value="">Select District</option>
+                     {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                   </select>
+                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                   </div>
+                 </div>
+               </div>
+
+               {/* TALUK */}
+               <div className="flex-1">
+                 <label className="flex items-center gap-2 mb-2">
+                   <span className="font-bold text-[15px] text-slate-900 tracking-tight">Taluk</span>
+                   <span className="text-xs font-semibold text-slate-400">ತಾಲ್ಲೂಕು</span>
+                 </label>
+                 <div className="relative">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <MapPin className="w-5 h-5" />
+                   </div>
+                   <select
+                     required
+                     value={form.taluk}
+                     onChange={(e) => handleChange('taluk', e.target.value)}
+                     disabled={!form.district}
+                     className="w-full bg-slate-50/50 hover:bg-slate-100/50 border-2 border-slate-200 focus:bg-white focus:border-blue-500 rounded-2xl py-3.5 pl-12 pr-10 font-semibold text-slate-900 outline-none transition-all shadow-inner appearance-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                   >
+                     <option value="">Select Taluk</option>
+                     {taluks.map(t => <option key={t} value={t}>{t}</option>)}
+                   </select>
+                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                   </div>
+                 </div>
+               </div>
+            </div>
+
+            {/* Error Message */}
+            {status === 'error' && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 font-semibold text-sm flex items-center gap-2 animate-[fade-in-up_0.3s]">
+                <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                {errorMsg}
+              </div>
+            )}
+
+            {/* SUBMIT BUTTON */}
+            <div className="pt-4">
+               <button
+                 type="submit"
+                 disabled={status === 'loading'}
+                 className="group relative flex items-center justify-center w-full py-4.5 h-[60px] bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 rounded-[1.25rem] shadow-[0_8px_30px_rgb(15,23,42,0.15)] hover:shadow-[0_15px_40px_rgb(15,23,42,0.25)] hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
+               >
+                 {status === 'loading' ? (
+                   <span className="flex items-center gap-2 text-white font-bold tracking-wide">
+                     <Loader2 className="w-5 h-5 animate-spin" /> Registering...
+                   </span>
+                 ) : (
+                   <span className="text-white font-semibold text-[16px] tracking-wide flex items-center gap-2">
+                     Complete Registration <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                   </span>
+                 )}
+               </button>
+            </div>
+
+            <p className="text-center text-xs font-semibold text-slate-400 mt-2">
+              📱 By registering, you agree to receive job alerts via SMS.
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
-};
-
-/* ─── Inline styles (no framework needed) ─── */
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)',
-    fontFamily: "'Inter', 'Segoe UI', -apple-system, sans-serif",
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  header: {
-    width: '100%',
-    maxWidth: '480px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '20px 24px 12px',
-    animation: 'fadeInUp 0.5s ease-out',
-  },
-  headerBack: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '14px',
-    border: '1px solid rgba(0,0,0,0.08)',
-    background: 'white',
-    fontSize: '20px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-    transition: 'transform 0.2s',
-  },
-  headerTitle: {
-    margin: 0,
-    fontSize: '22px',
-    fontWeight: 800,
-    color: '#065f46',
-    letterSpacing: '-0.02em',
-  },
-  headerSub: {
-    margin: 0,
-    fontSize: '13px',
-    color: '#6b7280',
-    fontWeight: 500,
-  },
-  form: {
-    width: '100%',
-    maxWidth: '480px',
-    padding: '8px 24px 40px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '18px',
-    animation: 'fadeInUp 0.6s ease-out 0.1s both',
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-  },
-  label: {
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#1f2937',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  labelKn: {
-    fontSize: '12px',
-    color: '#9ca3af',
-    fontWeight: 500,
-  },
-  input: {
-    width: '100%',
-    height: '56px',
-    padding: '0 18px',
-    fontSize: '17px',
-    fontWeight: 500,
-    border: '2px solid #e5e7eb',
-    borderRadius: '16px',
-    background: 'white',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    boxSizing: 'border-box',
-    color: '#111827',
-  },
-  select: {
-    width: '100%',
-    height: '56px',
-    padding: '0 18px',
-    fontSize: '17px',
-    fontWeight: 500,
-    border: '2px solid #e5e7eb',
-    borderRadius: '16px',
-    background: 'white',
-    outline: 'none',
-    cursor: 'pointer',
-    color: '#111827',
-    WebkitAppearance: 'none',
-    appearance: 'none',
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 16px center',
-    backgroundSize: '20px',
-    boxSizing: 'border-box',
-  },
-  phoneRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0',
-  },
-  phonePrefix: {
-    height: '56px',
-    padding: '0 14px',
-    fontSize: '17px',
-    fontWeight: 700,
-    color: '#065f46',
-    background: '#ecfdf5',
-    border: '2px solid #e5e7eb',
-    borderRight: 'none',
-    borderRadius: '16px 0 0 16px',
-    display: 'flex',
-    alignItems: 'center',
-    boxSizing: 'border-box',
-  },
-  phoneInput: {
-    borderRadius: '0 16px 16px 0',
-    flex: 1,
-  },
-  fieldError: {
-    fontSize: '13px',
-    color: '#dc2626',
-    fontWeight: 600,
-    margin: '2px 0 0 4px',
-  },
-  errorBanner: {
-    padding: '14px 18px',
-    background: '#fef2f2',
-    borderRadius: '14px',
-    border: '1px solid #fecaca',
-    color: '#dc2626',
-    fontSize: '14px',
-    fontWeight: 600,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  submitBtn: {
-    width: '100%',
-    height: '60px',
-    fontSize: '18px',
-    fontWeight: 800,
-    color: 'white',
-    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-    border: 'none',
-    borderRadius: '18px',
-    cursor: 'pointer',
-    boxShadow: '0 4px 20px rgba(5, 150, 105, 0.35)',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    marginTop: '8px',
-    letterSpacing: '-0.01em',
-  },
-  submitBtnDisabled: {
-    opacity: 0.7,
-    cursor: 'not-allowed',
-  },
-  loadingText: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
-  },
-  spinner: {
-    width: '20px',
-    height: '20px',
-    border: '3px solid rgba(255,255,255,0.3)',
-    borderTop: '3px solid white',
-    borderRadius: '50%',
-    display: 'inline-block',
-    animation: 'spin 0.8s linear infinite',
-  },
-  note: {
-    textAlign: 'center',
-    fontSize: '13px',
-    color: '#6b7280',
-    lineHeight: 1.6,
-    fontWeight: 500,
-  },
-  noteKn: {
-    color: '#9ca3af',
-    fontSize: '12px',
-  },
-
-  /* Success screen */
-  successContainer: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px 24px',
-    textAlign: 'center',
-    animation: 'fadeInUp 0.6s ease-out',
-    maxWidth: '420px',
-  },
-  successIcon: {
-    fontSize: '72px',
-    marginBottom: '20px',
-    animation: 'pulse 2s ease-in-out infinite',
-  },
-  successTitle: {
-    fontSize: '28px',
-    fontWeight: 800,
-    color: '#065f46',
-    marginBottom: '12px',
-    letterSpacing: '-0.02em',
-  },
-  successText: {
-    fontSize: '16px',
-    color: '#374151',
-    lineHeight: 1.6,
-    fontWeight: 500,
-    marginBottom: '8px',
-  },
-  successSubtext: {
-    fontSize: '14px',
-    color: '#9ca3af',
-    marginBottom: '28px',
-  },
-  backBtn: {
-    padding: '14px 28px',
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#065f46',
-    background: 'white',
-    border: '2px solid #d1fae5',
-    borderRadius: '14px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-  },
 };
 
 export default LaborRegister;
