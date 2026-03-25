@@ -15,6 +15,7 @@ import JobShortView from './pages/JobShortView';
 import JobPublicView from './pages/JobPublicView';
 import JobsList from './pages/JobsList';
 import AppliedJobs from './pages/AppliedJobs';
+import FasalPlanner from './pages/FasalPlanner';
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/j/:shortCode" element={<JobShortView />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/mandi-prices" element={<MandiPrices />} />
+          <Route path="/fasal-planner" element={<FasalPlanner />} />
         </Routes>
       </LanguageProvider>
     </AuthProvider>

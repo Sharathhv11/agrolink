@@ -307,7 +307,7 @@ export default function Home() {
               <button className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
                 <span className="text-xl group-hover:scale-110 transition-transform">👥</span> {t.menu?.community || 'Community'}
               </button>
-              <button className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
+              <button onClick={() => navigate('/fasal-planner')} className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
                 <span className="text-xl group-hover:scale-110 transition-transform">📊</span> {t.menu?.fasalPlan || 'Fasal Plan'}
               </button>
               

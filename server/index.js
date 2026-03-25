@@ -37,6 +37,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/otp', require('./routes/otpRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
+app.use('/api/fasal-planner', require('./routes/fasalPlannerRoutes'));
 
 app.get('/api/status', (req, res) => {
   res.json({ message: 'API is running' });
