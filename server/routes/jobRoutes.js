@@ -8,6 +8,7 @@ const JobApplication = require('../models/JobApplication');
 const JobViewEvent = require('../models/JobViewEvent');
 const { matchWorkersForJob } = require('../services/matchingService');
 const { notifyMatchedWorkersDirectly } = require('../services/notificationService');
+const { notifyLaborersByLocation } = require('../services/laborerNotificationService');
 const { getJobAnalytics } = require('../services/analyticsService');
 const { buildWorkerListPdfBuffer, buildWorkersSectionPdfBuffer } = require('../services/pdfService');
 
@@ -176,12 +177,26 @@ router.post('/', protect, async (req, res) => {
     const { workers, radiusUsedKm } = await matchWorkersForJob(job);
     const notificationResult = await notifyMatchedWorkersDirectly(job, workers);
 
+    // Also notify laborers registered via simple registration (LaborerBasic)
+    // matching by district/taluk — fire-and-forget (don't block response)
+    const laborerSmsResult = { sentCount: 0, failedCount: 0, matchedCount: 0 };
+    try {
+      const result = await notifyLaborersByLocation(job);
+      laborerSmsResult.sentCount = result.sentCount;
+      laborerSmsResult.failedCount = result.failedCount;
+      laborerSmsResult.matchedCount = result.matchedCount;
+    } catch (err) {
+      console.error('[LaborerSMS] Top-level error (non-blocking):', err.message);
+    }
+
     return res.status(201).json({
       jobId: job._id,
       shortCode: job.shortCode,
       matchedWorkers: workers.length,
       notificationsSent: notificationResult.sentCount,
       notificationsFailed: notificationResult.failedCount,
+      laborerSmsSent: laborerSmsResult.sentCount,
+      laborerSmsMatched: laborerSmsResult.matchedCount,
       radiusUsedKm,
       message: 'Job posted successfully',
     });
