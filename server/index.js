@@ -6,8 +6,19 @@ const connectDB = require('./config/db');
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Connect to database + ensure geospatial indexes exist
+(async () => {
+  await connectDB();
+
+  try {
+    // Ensure $geoNear can find the 2dsphere index on `locationPoint`
+    const User = require('./models/User');
+    await User.syncIndexes();
+    console.log('[Mongo] User geospatial indexes synced');
+  } catch (e) {
+    console.warn('[Mongo] Failed to sync indexes. $geoNear may require manual index creation:', e.message);
+  }
+})();
 
 const app = express();
 

@@ -35,3 +35,7 @@ export function getJobApplications(jobId, token) {
 export function acceptJobApplication(jobId, workerId, token) {
   return apiRequest(`/jobs/${jobId}/applications/${workerId}/accept`, { method: 'POST', token });
 }
+
+export function getMyAppliedJobs(token) {
+  return apiRequest('/jobs/my-applied-jobs', { method: 'GET', token });
+}

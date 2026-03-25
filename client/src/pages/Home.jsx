@@ -298,6 +298,9 @@ export default function Home() {
               <button onClick={() => navigate('/jobs')} className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
                 <span className="text-xl group-hover:scale-110 transition-transform">🌱</span> {t.menu?.jobs || 'Jobs'}
               </button>
+              <button onClick={() => navigate('/applied-jobs')} className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
+                <span className="text-xl group-hover:scale-110 transition-transform">🧾</span> {t.menu?.appliedJobs || 'Applied Jobs'}
+              </button>
               <button className="flex items-center gap-3 w-full p-3.5 rounded-xl hover:bg-[#E8F5EE] hover:text-[#1A6B3C] text-left font-semibold text-gray-700 transition-colors group">
                 <span className="text-xl group-hover:scale-110 transition-transform">🔍</span> {t.menu?.explore || 'Explore'}
               </button>

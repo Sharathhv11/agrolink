@@ -199,6 +199,59 @@ router.get('/my-jobs', protect, async (req, res) => {
   }
 });
 
+// Labour dashboard: jobs this user applied to (including approved/selected)
+router.get('/my-applied-jobs', protect, async (req, res) => {
+  try {
+    const applications = await JobApplication.find({ workerId: req.user._id })
+      .sort({ updatedAt: -1 })
+      .populate({
+        path: 'jobId',
+        select: 'title category wageType wageAmount startDate durationValue durationType location status createdBy',
+      });
+
+    const jobs = await Promise.all(
+      applications
+        .filter((app) => app.jobId)
+        .map(async (app) => {
+          const farmer = await User.findById(app.jobId.createdBy).select('name phone');
+          return {
+            applicationId: app._id,
+            applicationStatus: app.status,
+            appliedAt: app.createdAt,
+            updatedAt: app.updatedAt,
+            job: {
+              _id: app.jobId._id,
+              title: app.jobId.title,
+              category: app.jobId.category,
+              wageType: app.jobId.wageType,
+              wageAmount: app.jobId.wageAmount,
+              startDate: app.jobId.startDate,
+              durationValue: app.jobId.durationValue,
+              durationType: app.jobId.durationType,
+              location: app.jobId.location,
+              status: app.jobId.status,
+            },
+            farmer,
+          };
+        })
+    );
+
+    const approvedCount = jobs.filter((j) => ['shortlisted', 'hired'].includes(j.applicationStatus)).length;
+    const appliedCount = jobs.filter((j) => j.applicationStatus === 'applied').length;
+
+    return res.json({
+      summary: {
+        total: jobs.length,
+        applied: appliedCount,
+        approved: approvedCount,
+      },
+      jobs,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Failed to fetch applied jobs' });
+  }
+});
+
 router.delete('/:jobId', protect, async (req, res) => {
   try {
     const job = await Job.findById(req.params.jobId);

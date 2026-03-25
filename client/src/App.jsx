@@ -14,6 +14,7 @@ import MatchedWorkers from './pages/MatchedWorkers';
 import JobShortView from './pages/JobShortView';
 import JobPublicView from './pages/JobPublicView';
 import JobsList from './pages/JobsList';
+import AppliedJobs from './pages/AppliedJobs';
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/home" element={<Home />} />
           <Route path="/jobs" element={<JobsList />} />
+          <Route path="/applied-jobs" element={<AppliedJobs />} />
           <Route path="/jobs/new" element={<JobCreate />} />
           <Route path="/jobs/:jobId/analytics" element={<JobAnalytics />} />
           <Route path="/jobs/:jobId/workers" element={<MatchedWorkers />} />
