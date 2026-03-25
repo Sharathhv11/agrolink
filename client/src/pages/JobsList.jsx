@@ -52,6 +52,19 @@ const TRANSLATIONS = {
   }
 };
 
+const translateDynamicContent = (text, lang) => {
+  if (!text || lang !== 'kn') return text;
+  const map = {
+    'worker': 'ಕಾರ್ಮಿಕ',
+    'harvesting': 'ಕೊಯ್ಲು',
+    'dasarkoppal': 'ದಾಸರಕೊಪ್ಪಲು',
+    'filled': 'ಭರ್ತಿಯಾಗಿದೆ',
+    'closed': 'ಮುಚ್ಚಲಾಗಿದೆ'
+  };
+  const key = text.toString().toLowerCase().trim();
+  return map[key] || text;
+};
+
 export default function JobsList() {
   const { token } = useAuth();
   const { language, setLanguage } = useLanguage();
@@ -203,8 +216,8 @@ export default function JobsList() {
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-xl text-gray-900 line-clamp-1">
-                        {job.title}
+                      <h3 className="font-bold text-xl text-gray-900 line-clamp-1 capitalize">
+                        {translateDynamicContent(job.title, language)}
                       </h3>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider
@@ -215,14 +228,14 @@ export default function JobsList() {
                           }
                         `}
                       >
-                        {job.status === 'open' || !job.status ? t.open : job.status}
+                        {job.status === 'open' || !job.status ? t.open : translateDynamicContent(job.status, language)}
                       </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-sm font-semibold text-gray-500">
                       <div className="flex items-center gap-1.5 opacity-90">
                         <MapPin className="h-4 w-4 text-gray-400" />
-                        {job.location?.village || job.location?.district || t.locNotSpecified}
+                        <span className="capitalize">{translateDynamicContent(job.location?.village || job.location?.district, language) || t.locNotSpecified}</span>
                       </div>
                       <div className="flex items-center gap-1.5 opacity-90">
                         <Users className="h-4 w-4 text-gray-400" />

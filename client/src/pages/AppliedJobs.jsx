@@ -55,6 +55,21 @@ function statusBadge(status) {
   return 'bg-amber-100 text-amber-700 border-amber-200';
 }
 
+const translateDynamicContent = (text, lang) => {
+  if (!text || lang !== 'kn') return text;
+  const map = {
+    'worker': 'ಕಾರ್ಮಿಕ',
+    'harvesting': 'ಕೊಯ್ಲು',
+    'dasarkoppal': 'ದಾಸರಕೊಪ್ಪಲು',
+    'applied': 'ಅರ್ಜಿ ಸಲ್ಲಿಸಲಾಗಿದೆ',
+    'shortlisted': 'ಆಯ್ಕೆಯಾಗಿದೆ',
+    'hired': 'ನೇಮಕಗೊಂಡಿದೆ',
+    'rejected': 'ತಿರಸ್ಕರಿಸಲಾಗಿದೆ'
+  };
+  const key = text.toString().toLowerCase().trim();
+  return map[key] || text;
+};
+
 export default function AppliedJobs() {
   const { token } = useAuth();
   const { language, setLanguage } = useLanguage();
@@ -147,11 +162,11 @@ export default function AppliedJobs() {
               <div key={item.applicationId} className="rounded-xl bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-base font-bold text-gray-900">{item.job?.title || 'Job'}</p>
+                    <p className="text-base font-bold text-gray-900 capitalize">{translateDynamicContent(item.job?.title, language) || 'Job'}</p>
                     <p className="text-xs text-gray-500">{item.job?.category || '-'} </p>
                   </div>
-                  <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(item.applicationStatus)}`}>
-                    {item.applicationStatus}
+                  <span className={`rounded-full border px-2 py-1 text-xs font-bold uppercase ${statusBadge(item.applicationStatus)}`}>
+                    {translateDynamicContent(item.applicationStatus, language)}
                   </span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
@@ -159,9 +174,9 @@ export default function AppliedJobs() {
                   <p>{t.start} {item.job?.startDate ? new Date(item.job.startDate).toLocaleDateString() : '-'}</p>
                   <p>
                     {t.location}{' '}
-                    {[item.job?.location?.village, item.job?.location?.district, item.job?.location?.state]
+                    <span className="capitalize">{[translateDynamicContent(item.job?.location?.village, language), item.job?.location?.district, item.job?.location?.state]
                       .filter(Boolean)
-                      .join(', ') || '-'}
+                      .join(', ') || '-'}</span>
                   </p>
                   <p>{t.farmer} {item.farmer?.name || '-'}</p>
                 </div>
@@ -178,7 +193,7 @@ export default function AppliedJobs() {
             ) : null}
             {approvedJobs.map((item) => (
               <div key={`approved-${item.applicationId}`} className="rounded-xl border border-green-100 bg-green-50/40 p-4">
-                <p className="text-base font-bold text-green-800">{item.job?.title || 'Job'}</p>
+                <p className="text-base font-bold text-green-800 capitalize">{translateDynamicContent(item.job?.title, language) || 'Job'}</p>
                 <p className="mt-1 text-xs text-green-700">
                   {t.farmerContact} {item.farmer?.phone || '-'} | {t.start}{' '}
                   {item.job?.startDate ? new Date(item.job.startDate).toLocaleDateString() : '-'}

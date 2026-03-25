@@ -67,6 +67,8 @@ export const TRANSLATIONS = {
         profile: "My Profile",
       },
       menu: {
+        jobs: "Jobs",
+        appliedJobs: "Applied Jobs",
         postJob: "Post Job",
         explore: "Explore",
         community: "Community",
@@ -269,6 +271,8 @@ export const TRANSLATIONS = {
         profile: "ನನ್ನ ಪ್ರೊಫೈಲ್",
       },
       menu: {
+        jobs: "ಕೆಲಸಗಳು",
+        appliedJobs: "ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ ಕೆಲಸಗಳು",
         postJob: "ಕೆಲಸ ಪೋಸ್ಟ್ ಮಾಡಿ",
         explore: "ಅನ್ವೇಷಿಸಿ",
         community: "ಸಮುದಾಯ",
