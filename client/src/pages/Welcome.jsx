@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { TRANSLATIONS } from '../utils/translations.js';
@@ -6,6 +7,7 @@ import { TRANSLATIONS } from '../utils/translations.js';
 const Welcome = () => {
   const { loginWithGoogle } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const navigate = useNavigate();
   const t = (TRANSLATIONS[language] || TRANSLATIONS.en).welcome;
 
   return (
@@ -108,6 +110,20 @@ const Welcome = () => {
           <span className="relative z-10 text-xs text-white/45 font-medium opacity-0 animate-fade-in-up anim-delay-600 tracking-wide">
             {t.ctaNote}
           </span>
+
+          {/* Laborer Registration Link */}
+          <button
+            id="labor-register-link"
+            onClick={() => navigate('/labor-register')}
+            className="relative z-10 mt-6 flex items-center justify-center w-full max-w-[360px] h-[52px] bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-2xl opacity-0 animate-fade-in-up anim-delay-700 group hover:bg-white/20 hover:border-white/30 transition-all duration-400 cursor-pointer"
+          >
+            <svg className="w-5 h-5 mr-2.5 text-white/80 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-white/90 font-semibold text-sm group-hover:text-white transition-colors">
+              {language === 'kn' ? 'ಕಾರ್ಮಿಕ ನೋಂದಣಿ (ಸರಳ)' : 'Worker Registration (Simple)'}
+            </span>
+          </button>
 
           {/* Bottom wave divider */}
           <div className="absolute bottom-0 left-0 right-0 z-0 select-none pointer-events-none">

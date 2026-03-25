@@ -16,6 +16,7 @@ import JobPublicView from './pages/JobPublicView';
 import JobsList from './pages/JobsList';
 import AppliedJobs from './pages/AppliedJobs';
 import FasalPlanner from './pages/FasalPlanner';
+import LaborRegister from './pages/LaborRegister';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
       <LanguageProvider>
         <Routes>
           <Route path="/" element={<Welcome />} />
+          <Route path="/labor-register" element={<LaborRegister />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/home" element={<Home />} />
