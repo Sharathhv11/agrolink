@@ -27,6 +27,7 @@ async function queryWorkersByRadius(job, radiusKm) {
       $project: {
         name: 1,
         phone: 1,
+        language: 1,
         location: 1,
         distanceMeters: 1,
       },

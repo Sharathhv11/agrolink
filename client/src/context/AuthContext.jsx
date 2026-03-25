@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
+import { setUnauthorizedHandler } from '../api/apiClient';
 
 const AuthContext = createContext();
 
@@ -14,11 +15,43 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const NEXT_URL_KEY = 'agrolink_next_url';
+
+  const clearSessionAndGoHome = useCallback(() => {
+    localStorage.removeItem("agrolink_token");
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem(NEXT_URL_KEY);
+    } catch {
+      // ignore
+    }
+    navigate("/", { replace: true });
+  }, [navigate]);
+
+  const redirectToNextIfAny = useCallback(() => {
+    try {
+      const nextUrl = localStorage.getItem(NEXT_URL_KEY);
+      if (nextUrl) {
+        localStorage.removeItem(NEXT_URL_KEY);
+        navigate(nextUrl, { replace: true });
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  }, [NEXT_URL_KEY, navigate]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(clearSessionAndGoHome);
+    return () => setUnauthorizedHandler(() => {});
+  }, [clearSessionAndGoHome]);
 
   const executeGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        // Send this token for backend
         const response = await fetch(`${API_URL}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -27,11 +60,14 @@ export const AuthProvider = ({ children }) => {
         
         if (response.ok) {
           const data = await response.json();
-          // Backend sends jwt for frontend
           localStorage.setItem("agrolink_token", data.token);
           setToken(data.token);
           setUser(data.user);
           setIsAuthenticated(true);
+
+          if (redirectToNextIfAny()) {
+            return;
+          }
           
           if (data.needsOnboarding) {
             navigate('/onboarding');
@@ -49,7 +85,6 @@ export const AuthProvider = ({ children }) => {
   });
 
   const loginWithGoogle = () => {
-    // User clicks on the google -> google token
     executeGoogleLogin();
   };
 
@@ -64,10 +99,20 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
+      if (response.status === 401 || response.status === 404) {
+        clearSessionAndGoHome();
+        return;
+      }
+
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
+
+        // If we came from a protected deep link, go back (usually on '/')
+        if (window.location.pathname === '/' && redirectToNextIfAny()) {
+          return;
+        }
       } else {
         localStorage.removeItem("agrolink_token");
         setToken(null);

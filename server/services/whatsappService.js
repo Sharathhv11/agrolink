@@ -1,11 +1,13 @@
 const path = require('path');
 const dotenv = require('dotenv');
 const twilio = require('twilio');
+const { stringsFor, resolveLang } = require('../utils/notificationStrings');
 
 // Ensure .env is loaded when this module is required (e.g. workers, tests)
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 let twilioClient = null;
+
 
 function getTwilioClient() {
   if (!twilioClient) {
@@ -62,15 +64,10 @@ function formatTwilioError(err) {
   return err.message || String(err);
 }
 
-function formatWageLine(job) {
-  const suffixMap = {
-    hourly: '/hour',
-    daily: '/day',
-    weekly: '/week',
-    per_task: '/task',
-  };
-  const suffix = suffixMap[job.wageType] || '';
-  return `Rs ${job.wageAmount}${suffix}`;
+function formatWageLine(job, language) {
+  const t = stringsFor(language);
+  const suffix = t.wageSuffix[job.wageType] || '';
+  return `${t.currency} ${job.wageAmount}${suffix}`;
 }
 
 function formatLocationLine(job) {
@@ -82,21 +79,23 @@ function formatLocationLine(job) {
   return parts.length ? parts.join(', ') : null;
 }
 
-function formatStartDateLine(job) {
+function formatStartDateLine(job, language) {
   if (!job?.startDate) return null;
   const d = new Date(job.startDate);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const locale = resolveLang(language) === 'kn' ? 'kn-IN' : 'en-IN';
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function formatFacilitiesLine(job) {
+function formatFacilitiesLine(job, language) {
   const f = job?.facilities;
+  const t = stringsFor(language);
   if (!f || typeof f !== 'object') return null;
   const labels = [];
-  if (f.food) labels.push('Food');
-  if (f.shelter) labels.push('Shelter');
-  if (f.transport) labels.push('Transport');
-  if (f.medicalSupport) labels.push('Medical');
+  if (f.food) labels.push(t.facility.food);
+  if (f.shelter) labels.push(t.facility.shelter);
+  if (f.transport) labels.push(t.facility.transport);
+  if (f.medicalSupport) labels.push(t.facility.medicalSupport);
   return labels.length ? labels.join(', ') : null;
 }
 
@@ -110,26 +109,25 @@ function buildApplyUrl(job) {
   return `${String(base).replace(/\/$/, '')}/jobs/view/${id}`;
 }
 
-function buildMessageBody(job) {
-  const where = formatLocationLine(job) || 'Nearby';
-  const starts = formatStartDateLine(job) || 'See link';
-  const facilities = formatFacilitiesLine(job);
+function buildMessageBody(job, language = 'en') {
+  const t = stringsFor(language);
+  const where = formatLocationLine(job) || t.nearby;
+  const starts = formatStartDateLine(job, language) || t.seeLink;
+  const facilities = formatFacilitiesLine(job, language);
 
   const lines = [
-    '*🌾 AgroLink Job Alert! 🌾*',
-    '',
-    `*👷 Work:* ${job.title}`,
-    `*💰 Wage:* ${formatWageLine(job)}`,
-    `*📍 Location:* ${where}`,
-    `*📅 Starts:* ${starts}`,
+    t.alert,
+    `${t.work}: ${job.title}`,
+    `${t.wage}: ${formatWageLine(job, language)}`,
+    `${t.location}: ${where}`,
+    `${t.starts}: ${starts}`,
   ];
 
   if (facilities) {
-    lines.push(`*✨ Facilities:* ${facilities}`);
+    lines.push(`${t.facilities}: ${facilities}`);
   }
 
-  lines.push('');
-  lines.push(`*🔗 Apply Now:* \n${buildApplyUrl(job)}`);
+  lines.push(`${t.apply}: ${buildApplyUrl(job)}`);
 
   return lines.join('\n');
 }
@@ -140,8 +138,9 @@ function buildMessageBody(job) {
  *
  * @param {string} phone - E.164, e.g. +919876543210
  * @param {object} job - Mongoose doc or plain object
+ * @param {{ language?: 'en'|'kn' }} [options] - worker's stored language preference
  */
-async function sendWhatsAppMessage(phone, job) {
+async function sendWhatsAppMessage(phone, job, options = {}) {
   const rawFrom = process.env.TWILIO_WHATSAPP_FROM;
   if (!rawFrom) {
     const err = new Error('TWILIO_WHATSAPP_FROM is not configured');
@@ -152,11 +151,12 @@ async function sendWhatsAppMessage(phone, job) {
 
   const from = normalizeWhatsAppAddress(rawFrom);
   const to = normalizeWhatsAppAddress(phone);
-  const body = buildMessageBody(job);
+  const lang = resolveLang(options.language);
+  const body = buildMessageBody(job, lang);
   const client = getTwilioClient();
 
   try {
-    console.log('[WhatsApp] Sending WhatsApp message...');
+    console.log('[WhatsApp] Sending WhatsApp message...', `(lang=${lang})`);
 
     const message = await client.messages.create({
       from,

@@ -100,4 +100,27 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
+// @route   PUT /api/users/language
+// @desc    Persist UI language preference (en | kn) for notifications and profile
+// @access  Private
+router.put('/language', protect, async (req, res) => {
+  try {
+    const { language } = req.body;
+    if (typeof language !== 'string' || !['en', 'kn'].includes(language)) {
+      return res.status(400).json({ message: 'Language must be "en" or "kn".' });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: { language } },
+      { new: true }
+    ).select('language name email');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    return res.json({ language: user.language });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+});
+
 module.exports = router;

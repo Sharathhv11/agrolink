@@ -17,8 +17,8 @@ import JobsList from './pages/JobsList';
 
 const App = () => {
   return (
-    <LanguageProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <LanguageProvider>
         <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
@@ -33,8 +33,8 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/mandi-prices" element={<MandiPrices />} />
         </Routes>
-      </AuthProvider>
-    </LanguageProvider>
+      </LanguageProvider>
+    </AuthProvider>
   );
 };
 

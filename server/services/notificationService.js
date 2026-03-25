@@ -30,7 +30,9 @@ async function notifyMatchedWorkersDirectly(job, workers) {
     }
 
     try {
-      const message = await sendWhatsAppMessage(phone, job);
+      const message = await sendWhatsAppMessage(phone, job, {
+        language: worker.language,
+      });
       sentCount += 1;
       console.log(`[WhatsApp] OK worker=${worker._id} phone=${phone} job=${job._id} sid=${message.sid}`);
 
