@@ -707,7 +707,23 @@ router.post('/sms-webhook', async (req, res) => {
       if (job) {
         // Clean Indian phone
         const cleanedPhone = fromPhone.replace(/[\s-]/g, '').slice(-10); // get last 10 digits
-        const user = await User.findOne({ phone: new RegExp(cleanedPhone + "$") });
+        let user = await User.findOne({ phone: new RegExp(cleanedPhone + "$") });
+        
+        // Auto register if not found, since LaborerBasics are not in the User table yet
+        if (!user) {
+          const LaborerBasic = require('../models/LaborerBasic');
+          const lb = await LaborerBasic.findOne({ phone: new RegExp(cleanedPhone + "$") });
+          const formattedPhone = cleanedPhone.length === 10 ? '+91' + cleanedPhone : cleanedPhone;
+          let name = `Laborer ${formattedPhone.slice(-4)}`;
+          if (lb && lb.name) name = lb.name;
+
+          user = await User.create({
+            phone: formattedPhone,
+            name: name,
+            phoneVerified: true,
+            categories: ['laborer'] // Assign default role
+          });
+        }
         
         if (user) {
           let status = 'applied'; // default

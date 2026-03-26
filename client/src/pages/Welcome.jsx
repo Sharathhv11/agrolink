@@ -125,7 +125,7 @@ const Welcome = () => {
       // Outer wrapper (handles drop & delay)
       const wrapper = document.createElement('div');
       wrapper.style.position = 'fixed';
-      wrapper.style.left = `${e.clientX}px`;
+      wrapper.style.left = `${e.clientX}px`; 
       wrapper.style.top = `${e.clientY}px`;
       wrapper.style.pointerEvents = 'none';
       wrapper.style.zIndex = '9999';

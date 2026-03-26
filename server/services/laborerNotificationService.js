@@ -14,27 +14,16 @@ async function notifyLaborersByLocation(job) {
   try {
     console.log("🚀 Sending SMS...");
 
-    // Format date specifically as requested e.g. "26 Mar, 6 AM"
-    const stDate = job.startDate ? new Date(job.startDate) : new Date();
-    const dateStr = stDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    
-    // Fallback if no shortCode is available
-    const sc = job.shortCode || "j123";
-
     const message = await client.messages.create({
-      from: "+12603085905", // Twilio number
+      from: "+13187062561", // Twilio number
       to: "+919731482829",  // Your number
       body: `🌾 AgroLink Job Alert
 
-Work: ${job.title} | ₹${job.wageAmount} | ${job.location?.district || "N/A"}
-Date: ${dateStr}, 6 AM
+Work: ${job.title}
+Wage: ₹${job.wageAmount}
+Location: ${job.location?.district || "N/A"}
 
-Link: https://agrolink.in/j/${sc}
-
-Reply:
-${sc} 1 = Accept
-${sc} 2 = Reject
-${sc} 3 = Cancel`
+Time: ${new Date().toLocaleString()}`
     });
 
     console.log("✅ SMS SENT:", message.sid);

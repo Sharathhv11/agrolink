@@ -109,54 +109,50 @@ function buildApplyUrl(job) {
   return `${String(base).replace(/\/$/, '')}/jobs/view/${id}`;
 }
 
-function buildMessageBody(job, language = 'en') {
-  const t = stringsFor(language);
-  const where = formatLocationLine(job) || t.nearby;
-  const starts = formatStartDateLine(job, language) || t.seeLink;
-  const facilities = formatFacilitiesLine(job, language);
+// Obsolete localized format removed for concise format
 
-  const lines = [
-    t.alert,
-    `${t.work}: ${job.title}`,
-    `${t.wage}: ${formatWageLine(job, language)}`,
-    `${t.location}: ${where}`,
-    `${t.starts}: ${starts}`,
-  ];
-
-  if (facilities) {
-    lines.push(`${t.facilities}: ${facilities}`);
-  }
-
-  lines.push(`${t.apply}: ${buildApplyUrl(job)}`);
-
-  return lines.join('\n');
+function normalizePhoneAddress(addr) {
+  if (!addr || typeof addr !== 'string') return addr;
+  // Ensure it's clean and doesn't have whatsapp prefix
+  let trimmed = addr.trim().replace(/^whatsapp:/i, '');
+  return trimmed;
 }
 
-/**
- * Plain-text WhatsApp (same pattern as Twilio Sandbox: messages.create({ from, to, body })).
- * Credentials must come from .env — never hardcode Account SID / Auth Token.
- *
- * @param {string} phone - E.164, e.g. +919876543210
- * @param {object} job - Mongoose doc or plain object
- * @param {{ language?: 'en'|'kn' }} [options] - worker's stored language preference
- */
+function buildMessageBody(job) {
+  const sc = job.shortCode || "j123";
+  const stDate = job.startDate ? new Date(job.startDate) : new Date();
+  const dateStr = stDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+  return `🌾 AgroLink Job Alert
+
+Work: ${job.title} | ₹${job.wageAmount} | ${job.location?.district || "N/A"}
+Date: ${dateStr}, 6 AM
+
+Link: https://agrolink.in/j/${sc}
+
+Reply:
+${sc} 1 = Accept
+${sc} 2 = Reject
+${sc} 3 = Cancel`;
+}
+
 async function sendWhatsAppMessage(phone, job, options = {}) {
-  const rawFrom = process.env.TWILIO_WHATSAPP_FROM;
+  // Now functioning as an SMS service despite the historic function name
+  const rawFrom = process.env.TWILIO_PHONE_NUMBER;
   if (!rawFrom) {
-    const err = new Error('TWILIO_WHATSAPP_FROM is not configured');
-    console.error('[WhatsApp] FAILED! (config)');
-    console.error('[WhatsApp] Error:', err.message);
+    const err = new Error('TWILIO_PHONE_NUMBER is not configured');
+    console.error('[SMS] FAILED! (config)');
+    console.error('[SMS] Error:', err.message);
     throw err;
   }
 
-  const from = normalizeWhatsAppAddress(rawFrom);
-  const to = normalizeWhatsAppAddress(phone);
-  const lang = resolveLang(options.language);
-  const body = buildMessageBody(job, lang);
+  const from = normalizePhoneAddress(rawFrom);
+  const to = normalizePhoneAddress(phone);
+  const body = buildMessageBody(job);
   const client = getTwilioClient();
 
   try {
-    console.log('[WhatsApp] Sending WhatsApp message...', `(lang=${lang})`);
+    console.log('[SMS] Sending SMS message...');
 
     const message = await client.messages.create({
       from,
@@ -164,7 +160,7 @@ async function sendWhatsAppMessage(phone, job, options = {}) {
       body,
     });
 
-    console.log('[WhatsApp] SUCCESS!');
+    console.log('[SMS] SUCCESS!');
     console.log('[WhatsApp] Message SID:', message.sid);
     console.log('[WhatsApp] from=', from, 'to=', to);
 
@@ -194,6 +190,6 @@ module.exports = {
   buildApplyUrl,
   formatWageLine,
   formatTwilioError,
-  normalizeWhatsAppAddress,
+  normalizePhoneAddress,
   buildMessageBody,
 };
