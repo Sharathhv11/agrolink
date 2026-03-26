@@ -14,16 +14,19 @@ async function notifyLaborersByLocation(job) {
   try {
     console.log("🚀 Sending SMS...");
 
+
     const message = await client.messages.create({
-      from: "+13187062561", // Twilio number
+      from: process.env.TWILIO_PHONE_NUMBER, // Twilio number
       to: "+919731482829",  // Your number
       body: `🌾 AgroLink Job Alert
 
-Work: ${job.title}
-Wage: ₹${job.wageAmount}
-Location: ${job.location?.district || "N/A"}
+ಹೊಸ ಕೆಲಸ ಲಭ್ಯವಿದೆ!
 
-Time: ${new Date().toLocaleString()}`
+📍 ಸ್ಥಳ: ಹಾಸನ್ 
+👷 ಕೆಲಸ: ಕೂಲಿ ಕೆಲಸ
+💰 ವೇತನ: ₹1000 / ದಿನ
+
+📞 ಸಂಪರ್ಕಿಸಿ: 9731482829`
     });
 
     console.log("✅ SMS SENT:", message.sid);
