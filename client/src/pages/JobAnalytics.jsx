@@ -17,17 +17,17 @@ const TRANSLATIONS = {
     noViewData: "No view data yet.",
     jobAnalytics: "Job Analytics",
     failedToLoad: "Failed to load analytics",
-    views: "Views",
-    interested: "Interested",
-    applications: "Applications",
+    views: "Views Count",
+    interested: "Interested Labour",
+    applications: "Accepted Labour",
     interestedVsNot: "Interested vs Not Interested",
     interestedWorkers: "interested workers",
     viewsOverTime: "Views Over Time",
     workerManagement: "Worker Management",
     employed: "Employed",
-    matched: "Matched",
-    applied: "Applied",
-    approved: "Approved",
+    matched: "Matched Labour",
+    applied: "Accepted Labour",
+    approved: "Approved Labour",
     noMatchedFound: "No matched workers found.",
     noApplications: "No applications yet.",
     noApprovedFound: "No approved workers yet.",
@@ -44,7 +44,7 @@ const TRANSLATIONS = {
     failedToAccept: "Failed to accept worker",
     matchStatus: "Matched",
     downloadMatchedPdf: "Download Matched PDF",
-    downloadAppliedPdf: "Download Applied PDF",
+    downloadAppliedPdf: "Download Accepted PDF",
     downloadApprovedPdf: "Download Approved PDF",
   },
   kn: {
@@ -52,17 +52,17 @@ const TRANSLATIONS = {
     noViewData: "ಯಾವುದೇ ವೀಕ್ಷಣೆಯ ಡೇಟಾ ಇಲ್ಲ.",
     jobAnalytics: "ಕೆಲಸದ ವಿಶ್ಲೇಷಣೆ",
     failedToLoad: "ವಿಶ್ಲೇಷಣೆ ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
-    views: "ವೀಕ್ಷಣೆಗಳು",
-    interested: "ಆಸಕ್ತರು",
-    applications: "ಅರ್ಜಿಗಳು",
+    views: "ವೀಕ್ಷಣೆಗಳ ಸಂಖ್ಯೆ",
+    interested: "ಆಸಕ್ತ ಕಾರ್ಮಿಕರು",
+    applications: "ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ ಕಾರ್ಮಿಕರು",
     interestedVsNot: "ಆಸಕ್ತರು ಮತ್ತು ಆಸಕ್ತಿ ಇಲ್ಲದವರು",
     interestedWorkers: "ಆಸಕ್ತ ಕಾರ್ಮಿಕರು",
     viewsOverTime: "ಸಮಯದ ಮೇಲೆ ವೀಕ್ಷಣೆಗಳು",
     workerManagement: "ಕಾರ್ಮಿಕರ ನಿರ್ವಹಣೆ",
     employed: "ಉದ್ಯೋಗಿ",
-    matched: "ಹೊಂದಿಕೆಯಾದ",
-    applied: "ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ",
-    approved: "ಅನುಮೋದಿಸಿದ",
+    matched: "ಹೊಂದಿಕೆಯಾದ ಕಾರ್ಮಿಕರು",
+    applied: "ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ ಕಾರ್ಮಿಕರು",
+    approved: "ಅನುಮೋದಿತ ಕಾರ್ಮಿಕರು",
     noMatchedFound: "ಯಾವುದೇ ಹೊಂದಿಕೆಯಾದ ಕಾರ್ಮಿಕರು ಕಂಡುಬಂದಿಲ್ಲ.",
     noApplications: "ಇನ್ನೂ ಯಾವುದೇ ಅರ್ಜಿಗಳಿಲ್ಲ.",
     noApprovedFound: "ಇನ್ನೂ ಯಾವುದೇ ಅನುಮೋದಿತ ಕಾರ್ಮಿಕರಿಲ್ಲ.",
@@ -326,8 +326,13 @@ export default function JobAnalytics() {
                   <p className="text-sm text-gray-500">{t.noMatchedFound}</p>
                 ) : (
                   workers.map((item) => (
-                    <div key={item.id} className="rounded-xl border border-gray-100 p-3 shadow-sm">
-                      <p className="text-base font-semibold text-gray-800">{item.worker?.name || t.worker}</p>
+                    <div key={item.id} className="rounded-xl border border-gray-100 p-3 shadow-sm relative">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-base font-semibold text-gray-800">{item.worker?.name || t.worker}</p>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
+                          {language === 'en' ? 'Labour' : 'ಕಾರ್ಮಿಕ'}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-600">{t.phone}{item.worker?.phone || '-'}</p>
                       <p className="text-sm text-gray-600">
                         {t.address}

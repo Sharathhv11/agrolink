@@ -49,6 +49,23 @@ export const AuthProvider = ({ children }) => {
     return () => setUnauthorizedHandler(() => {});
   }, [clearSessionAndGoHome]);
 
+  const handleLoginPayload = (data) => {
+    localStorage.setItem("agrolink_token", data.token);
+    setToken(data.token);
+    setUser(data.user);
+    setIsAuthenticated(true);
+
+    if (redirectToNextIfAny()) {
+      return;
+    }
+    
+    if (data.needsOnboarding || data.isNewUser) {
+      navigate('/onboarding');
+    } else {
+      navigate('/home');
+    }
+  };
+
   const executeGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -60,20 +77,7 @@ export const AuthProvider = ({ children }) => {
         
         if (response.ok) {
           const data = await response.json();
-          localStorage.setItem("agrolink_token", data.token);
-          setToken(data.token);
-          setUser(data.user);
-          setIsAuthenticated(true);
-
-          if (redirectToNextIfAny()) {
-            return;
-          }
-          
-          if (data.needsOnboarding) {
-            navigate('/onboarding');
-          } else {
-            navigate('/home');
-          }
+          handleLoginPayload(data);
         } else {
           console.error("Backend auth failed", await response.json());
         }
@@ -162,6 +166,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated,
     loginWithGoogle,
+    handleLoginPayload,
     handleAuthSuccess,
     logout,
   };

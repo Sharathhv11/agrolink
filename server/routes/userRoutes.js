@@ -123,4 +123,86 @@ router.put('/language', protect, async (req, res) => {
   }
 });
 
+// @route   POST /api/users/follow/:id
+// @desc    Follow / Unfollow a user
+// @access  Private
+router.post('/follow/:id', protect, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const myId = req.user._id;
+
+    if (targetId === myId.toString()) {
+      return res.status(400).json({ message: 'You cannot follow yourself' });
+    }
+
+    const targetUser = await User.findById(targetId);
+    if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+    const me = await User.findById(myId);
+
+    const alreadyFollowing = me.following.some((id) => id.toString() === targetId);
+
+    if (alreadyFollowing) {
+      // Unfollow
+      me.following = me.following.filter((id) => id.toString() !== targetId);
+      targetUser.followers = targetUser.followers.filter((id) => id.toString() !== myId.toString());
+    } else {
+      // Follow
+      me.following.push(targetId);
+      targetUser.followers.push(myId);
+    }
+
+    await me.save();
+    await targetUser.save();
+
+    res.json({
+      followed: !alreadyFollowing,
+      followersCount: targetUser.followers.length,
+      followingCount: me.following.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @route   GET /api/users/explore
+// @desc    Get farmers / owners to discover (Explore tab)
+// @access  Private
+router.get('/explore', protect, async (req, res) => {
+  try {
+    const myId = req.user._id;
+    const me = await User.findById(myId).select('following location');
+
+    // Find users that are NOT the current user
+    // Prioritize: same district, farmers/machine_owners, etc.
+    const query = { _id: { $ne: myId } };
+
+    const users = await User.find(query)
+      .select('name email avatar categories location availabilityStatus followers following rating totalJobsCompleted')
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .lean();
+
+    const myFollowing = (me.following || []).map((id) => id.toString());
+
+    const enriched = users.map((u) => ({
+      _id: u._id,
+      name: u.name,
+      avatar: u.avatar,
+      categories: u.categories || [],
+      location: u.location || {},
+      availabilityStatus: u.availabilityStatus || 'available',
+      followersCount: (u.followers || []).length,
+      followingCount: (u.following || []).length,
+      rating: u.rating?.average || 0,
+      jobsCompleted: u.totalJobsCompleted || 0,
+      isFollowing: myFollowing.includes(u._id.toString()),
+    }));
+
+    res.json(enriched);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

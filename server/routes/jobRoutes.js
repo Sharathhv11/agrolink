@@ -646,4 +646,94 @@ router.get('/public/:jobId', async (req, res) => {
   }
 });
 
+// Allow web UI users to accept/reject jobs by typing their phone number
+router.post('/public/respond', async (req, res) => {
+  try {
+    const { shortCode, phone, actionCode } = req.body;
+    if (!shortCode || !phone || !actionCode) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const job = await Job.findOne({ shortCode });
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    // Clean Indian phone safely
+    const cleanedPhone = phone.replace(/[\s-]/g, '').slice(-10);
+    let user = await User.findOne({ phone: new RegExp(cleanedPhone + "$") });
+    
+    // Auto register if not found to make applying seamless
+    if (!user) {
+      const formattedPhone = cleanedPhone.length === 10 ? '+91' + cleanedPhone : cleanedPhone;
+      user = await User.create({
+        phone: formattedPhone,
+        name: `User ${formattedPhone.slice(-4)}`,
+        phoneVerified: false,
+      });
+    }
+
+    let status = 'applied'; 
+    if (actionCode === '1') status = 'applied'; 
+    if (actionCode === '2') status = 'rejected';
+    if (actionCode === '3') status = 'cancelled';
+
+    const existingApp = await JobApplication.findOne({ jobId: job._id, workerId: user._id });
+    if (existingApp) {
+       existingApp.status = status;
+       await existingApp.save();
+    } else {
+       await JobApplication.create({ jobId: job._id, workerId: user._id, status });
+    }
+
+    return res.json({ success: true, message: 'Response recorded successfully' });
+  } catch (error) {
+    console.error("Web respond error:", error);
+    return res.status(500).json({ message: 'Failed to record response' });
+  }
+});
+
+router.post('/sms-webhook', async (req, res) => {
+  try {
+    // Twilio sends Body, From
+    const body = req.body.Body || '';
+    const fromPhone = req.body.From || '';
+
+    // Match format: "123 1", "jXYZ 2"
+    const parts = body.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      const shortCode = parts[0];
+      const actionCode = parts[1]; // 1=Accept, 2=Reject, 3=Cancel
+
+      const job = await Job.findOne({ shortCode });
+      if (job) {
+        // Clean Indian phone
+        const cleanedPhone = fromPhone.replace(/[\s-]/g, '').slice(-10); // get last 10 digits
+        const user = await User.findOne({ phone: new RegExp(cleanedPhone + "$") });
+        
+        if (user) {
+          let status = 'applied'; // default
+          if (actionCode === '1') status = 'applied'; // They want to accept the job
+          if (actionCode === '2') status = 'rejected';
+          if (actionCode === '3') status = 'cancelled';
+
+          const existingApp = await JobApplication.findOne({ jobId: job._id, workerId: user._id });
+          if (existingApp) {
+             existingApp.status = status;
+             await existingApp.save();
+          } else {
+             await JobApplication.create({ jobId: job._id, workerId: user._id, status });
+          }
+        }
+      }
+    }
+    
+    // Twilio needs XML response
+    res.type('text/xml');
+    res.send('<Response></Response>');
+  } catch (error) {
+    console.error("SMS Webhook error:", error);
+    res.type('text/xml');
+    res.send('<Response></Response>');
+  }
+});
+
 module.exports = router;

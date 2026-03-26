@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,14 +10,90 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
-  Leaf
+  Leaf,
+  X,
+  Phone,
+  Loader2
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Welcome = () => {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, handleLoginPayload } = useAuth();
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const t = (TRANSLATIONS[language] || TRANSLATIONS.en).welcome;
+
+  // Modern Login Modal States
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setOtpError('');
+    const cleaned = phone.replace(/[\s-]/g, '');
+    if (!/^(\+91)?[6-9]\d{9}$/.test(cleaned)) {
+      setOtpError('Enter a valid 10-digit Indian phone number');
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: cleaned }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowOtpInput(true);
+        if (data.mockOtp) {
+          // If twilio isn't set up, the backend returns simulated mockOtp in dev
+          console.log("Mock OTP logic injected for testing:", data.mockOtp);
+          // Don't auto-fill for the user to make it feel real, but it's in console
+        }
+      } else {
+        setOtpError(data.message || 'Failed to send OTP');
+      }
+    } catch (err) {
+      setOtpError('Network error trying to send OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setOtpError('');
+    if (otp.length < 4) {
+      setOtpError('Enter valid OTP');
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsLoginModalOpen(false);
+        handleLoginPayload(data); // Routes them properly
+      } else {
+        setOtpError(data.message || 'Invalid OTP');
+      }
+    } catch (err) {
+      setOtpError('Network error verifying OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Inject keyframes for premium falling animation
@@ -25,16 +101,16 @@ const Welcome = () => {
     style.innerHTML = `
       @keyframes leafDrop {
         0% { transform: translateY(0); opacity: 0; }
-        5% { opacity: 1; }
-        85% { opacity: 1; }
+        10% { opacity: 1; }
+        75% { opacity: 1; }
         100% { transform: translateY(${window.innerHeight}px); opacity: 0; }
       }
       @keyframes leafZigZag {
         0% { transform: translateX(0) rotate(0deg); }
-        25% { transform: translateX(-35px) rotate(-25deg); }
-        50% { transform: translateX(25px) rotate(35deg); }
+        25% { transform: translateX(-35px) rotate(-30deg); }
+        50% { transform: translateX(25px) rotate(30deg); }
         75% { transform: translateX(-20px) rotate(-15deg); }
-        100% { transform: translateX(10px) rotate(5deg); }
+        100% { transform: translateX(10px) rotate(10deg); }
       }
     `;
     document.head.appendChild(style);
@@ -42,8 +118,8 @@ const Welcome = () => {
     let lastTime = 0;
     const handleMouseMove = (e) => {
       const now = Date.now();
-      if (now - lastTime < 80) return; // Prevent too many leaves
-      if (Math.random() > 0.3) return;
+      if (now - lastTime < 100) return; // Allow multiple leaves, but throttle to 1 per 100ms
+      if (Math.random() > 0.4) return; // 40% chance per movement
       lastTime = now;
 
       // Outer wrapper (handles drop & delay)
@@ -55,15 +131,16 @@ const Welcome = () => {
       wrapper.style.zIndex = '9999';
       wrapper.style.opacity = '0'; // default hidden before delay
       
-      const delay = Math.random() * 0.4 + 0.1; // 100ms - 500ms hanging delay!
-      wrapper.style.animation = `leafDrop 4s ease-in ${delay}s forwards`;
+      const delay = Math.random() * 0.2; // Minimal delay
+      // Smooth linear fall over 3.5 seconds
+      wrapper.style.animation = `leafDrop 3.5s linear ${delay}s forwards`;
       
       // Inner wrapper (handles zig-zag swaying)
       const leaf = document.createElement('div');
-      leaf.innerHTML = '🍃';
-      leaf.style.fontSize = `${Math.random() * 10 + 14}px`;
+      // Light green SVG leaf instead of emoji, reduced to a much smaller size
+      leaf.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#a7f3d0" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
       
-      const swayDuration = 1.8 + Math.random() * 1.5;
+      const swayDuration = 1.2 + Math.random() * 0.5; // Slightly faster swaying
       const swayDir = Math.random() > 0.5 ? 'normal' : 'reverse';
       leaf.style.animation = `leafZigZag ${swayDuration}s ease-in-out infinite alternate ${swayDir}`;
 
@@ -71,8 +148,10 @@ const Welcome = () => {
       document.body.appendChild(wrapper);
 
       setTimeout(() => {
-        if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
-      }, (4 + delay) * 1000 + 100);
+        if (wrapper.parentNode) {
+          wrapper.parentNode.removeChild(wrapper);
+        }
+      }, (2.5 + delay) * 1000 + 50);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -113,7 +192,7 @@ const Welcome = () => {
             {language === 'en' ? 'ಕನ್ನಡ' : 'EN'}
           </button>
           <button 
-            onClick={loginWithGoogle}
+            onClick={() => setIsLoginModalOpen(true)}
             className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-full transition-all active:scale-95 shadow-md shadow-slate-900/10"
           >
             Sign In
@@ -151,7 +230,7 @@ const Welcome = () => {
           {/* User CTAs */}
           <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto animate-[fade-in-up_1.2s_ease-out]">
             <button 
-              onClick={loginWithGoogle}
+              onClick={() => setIsLoginModalOpen(true)}
               className="group relative flex items-center justify-center w-full sm:w-auto px-8 py-4 bg-slate-900 rounded-[2rem] shadow-[0_8px_30px_rgb(15,23,42,0.15)] hover:shadow-[0_15px_40px_rgb(15,23,42,0.25)] hover:-translate-y-0.5 transition-all duration-300 active:scale-95 border border-slate-700 hover:border-slate-600"
             >
               <div className="bg-white p-1 rounded-full mr-3 shadow-inner">
@@ -335,6 +414,119 @@ const Welcome = () => {
           </div>
         </div>
       </footer>
+
+      {/* 7. LOGIN MODAL OVERLAY */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]">
+          <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200/50 animate-[fade-in-up_0.3s_ease-out]">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setIsLoginModalOpen(false)}
+              className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors active:scale-95"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Welcome Back</h2>
+                <p className="text-sm font-semibold text-slate-500">Log in or create an account to continue</p>
+              </div>
+
+              {/* Google Login Option */}
+              <div className="mb-6">
+                <button 
+                  onClick={() => { setIsLoginModalOpen(false); loginWithGoogle(); }}
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all font-bold text-slate-700 shadow-sm active:scale-95"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                  </svg>
+                  Continue with Google
+                </button>
+              </div>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex-1 h-px bg-slate-200"></div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">OR</span>
+                <div className="flex-1 h-px bg-slate-200"></div>
+              </div>
+
+              {/* OTP Login Option */}
+              <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100/80">
+                {!showOtpInput ? (
+                  <form onSubmit={handleSendOtp}>
+                    <label className="block text-xs font-bold text-slate-900 mb-2 tracking-wide">PHONE NUMBER</label>
+                    <div className="flex rounded-xl border-2 border-slate-200 bg-white focus-within:border-blue-500 shadow-inner overflow-hidden transition-all mb-3">
+                      <div className="flex items-center justify-center pl-3 pr-2 border-r border-slate-200 bg-slate-50">
+                         <Phone className="w-4 h-4 text-slate-400" />
+                         <span className="ml-1.5 font-bold text-slate-500 text-sm">+91</span>
+                      </div>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Mobile Number"
+                        maxLength={10}
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                        className="w-full py-3 px-3 font-bold tracking-wide text-slate-900 placeholder:text-slate-300 outline-none"
+                      />
+                    </div>
+                    {otpError && <p className="text-xs text-red-500 font-bold mb-3">{otpError}</p>}
+                    <button
+                      type="submit"
+                      disabled={otpLoading}
+                      className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all disabled:bg-slate-300 active:scale-95"
+                    >
+                      {otpLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Send OTP via SMS'}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="animate-[fade-in_0.3s_ease-out]">
+                    <label className="block text-xs font-bold text-slate-900 mb-2 tracking-wide text-center">ENTER 6-DIGIT OTP</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="000000"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="w-full py-3 px-4 text-center font-black tracking-[0.5em] text-xl text-slate-900 bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl outline-none shadow-inner mb-3 transition-all placeholder:tracking-normal placeholder:font-semibold placeholder:text-sm placeholder:text-slate-300"
+                    />
+                    {otpError && <p className="text-xs text-red-500 font-bold mb-3 text-center">{otpError}</p>}
+                    <button
+                      type="submit"
+                      disabled={otpLoading}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all disabled:bg-slate-300 active:scale-95"
+                    >
+                      {otpLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Verify & Login'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowOtpInput(false)}
+                      className="w-full mt-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                    >
+                      Change Phone Number
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+            <div className="bg-slate-50 border-t border-slate-100 p-4 text-center">
+               <p className="text-[11px] font-medium text-slate-400">By logging in, you agree to our Terms of Service & Privacy Policy.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

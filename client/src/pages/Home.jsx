@@ -6,12 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Menu, Search, MapPin, Share2, Heart, Repeat2, Plus, X, 
   ChevronDown, User, LogOut, TrendingUp, TrendingDown, Minus,
-  Briefcase, ClipboardCheck, Sprout, MessageCircle
+  Briefcase, ClipboardCheck, Sprout, MessageCircle,
+  UserPlus, UserCheck, Star, Award, Loader2
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Home() {
   const { language, setLanguage } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const navigate = useNavigate();
   const t = (TRANSLATIONS[language] || TRANSLATIONS.en).home;
 
@@ -25,6 +28,13 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [mandiPrices, setMandiPrices] = useState([]);
+
+  // Explore tab state
+  const [exploreUsers, setExploreUsers] = useState([]);
+  const [loadingExplore, setLoadingExplore] = useState(false);
+  const [followingStates, setFollowingStates] = useState({}); // { userId: bool }
+  const [followLoading, setFollowLoading] = useState({}); // { userId: bool }
+  const [followedUsers, setFollowedUsers] = useState([]); // users followed from Explore
   
   // Fetch Mandi Prices
   useEffect(() => {
@@ -75,7 +85,120 @@ export default function Home() {
     fetchMandiPrices();
   }, [language, user?.location]);
 
-  const posts = [
+  // Fetch explore users when tab is active
+  useEffect(() => {
+    if (activeTab === 'explore' && token) {
+      fetchExploreUsers();
+    }
+  }, [activeTab, token]);
+
+  const fetchExploreUsers = async () => {
+    setLoadingExplore(true);
+    try {
+      const res = await fetch(`${API_URL}/users/explore`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setExploreUsers(data);
+        // Set initial follow states
+        const states = {};
+        data.forEach(u => { states[u._id] = u.isFollowing; });
+        setFollowingStates(states);
+        // Populate initially-followed users into followedUsers
+        setFollowedUsers(prev => {
+          const existingIds = new Set(prev.map(u => u._id));
+          const alreadyFollowed = data.filter(u => u.isFollowing && !existingIds.has(u._id));
+          return [...prev, ...alreadyFollowed];
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch explore users:', err);
+    } finally {
+      setLoadingExplore(false);
+    }
+  };
+
+  const handleFollow = async (userId) => {
+    setFollowLoading(prev => ({ ...prev, [userId]: true }));
+    try {
+      const res = await fetch(`${API_URL}/users/follow/${userId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFollowingStates(prev => ({ ...prev, [userId]: data.followed }));
+        // Update follower count in exploreUsers
+        setExploreUsers(prev =>
+          prev.map(u =>
+            u._id === userId
+              ? { ...u, followersCount: data.followersCount, isFollowing: data.followed }
+              : u
+          )
+        );
+        // Instantly add/remove from followedUsers for the Following tab
+        if (data.followed) {
+          const person = exploreUsers.find(u => u._id === userId);
+          if (person) {
+            setFollowedUsers(prev => {
+              if (prev.find(u => u._id === userId)) return prev;
+              return [...prev, { ...person, followersCount: data.followersCount, isFollowing: true }];
+            });
+          }
+        } else {
+          setFollowedUsers(prev => prev.filter(u => u._id !== userId));
+        }
+        setToastMessage(data.followed
+          ? (language === 'en' ? '✅ Followed! Check Following tab' : '✅ ಅನುಸರಿಸಿದ್ದೀರಿ! Following ಟ್ಯಾಬ್ ನೋಡಿ')
+          : (language === 'en' ? 'Unfollowed' : 'ಅನುಸರಣೆ ತೆಗೆಯಲಾಗಿದೆ')
+        );
+        setTimeout(() => setToastMessage(''), 2500);
+      }
+    } catch (err) {
+      console.error('Follow failed:', err);
+    } finally {
+      setFollowLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const activeCropTemplates = [
+    { en: "Sugarcane Harvesting", kn: "ಕಬ್ಬು ಕಟಾವು", emoji: "🎋", w: "700", n: "15" },
+    { en: "Mango Plucking", kn: "ಮಾವು ಕೊಯ್ಲು", emoji: "🥭", w: "500", n: "5" },
+    { en: "Tractor Ploughing", kn: "ಟ್ರ್ಯಾಕ್ಟರ್ ಉಳುಮೆ", emoji: "🚜", w: "800/hr", n: "1 booking slot" },
+    { en: "Maize Sowing", kn: "ಮೆಕ್ಕೆಜೋಳ ಬಿತ್ತನೆ", emoji: "🌽", w: "500", n: "8" },
+    { en: "Tomato Picking", kn: "ಟೊಮೆಟೊ ಕೀಳುವುದು", emoji: "🍅", w: "450", n: "10" }
+  ];
+
+  const followedUserPosts = followedUsers.map((u, i) => {
+    const t = activeCropTemplates[i % activeCropTemplates.length];
+    // Helper to extract initials like RK for Raju Kumar
+    const parts = (u.name || "U").split(' ');
+    const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
+
+    return {
+      id: `dyn_${u._id}`,
+      author: { en: u.name, kn: u.name },
+      initials,
+      avatar: u.avatar,
+      category: { en: getCategoryLabel(u.categories?.[0]), kn: getCategoryLabel(u.categories?.[0]) },
+      village: { 
+        en: u.location?.village || u.location?.district || "Karnataka",
+        kn: u.location?.village || u.location?.district || "ಕರ್ನಾಟಕ"
+      },
+      time: { en: "Just now", kn: "ಇದೀಗ" },
+      crop: { en: t.en, kn: t.kn },
+      date: { en: "Dec 25-28", kn: "ಡಿಸೆಂಬರ್ 25-28" },
+      wage: `₹${t.w}`,
+      workersNeeded: t.n,
+      distance: `${(Math.random() * 8 + 1).toFixed(1)} km`,
+      reposts: 0,
+      interested: 0,
+      emoji: t.emoji
+    };
+  });
+
+  const initialPosts = [
     {
       id: 1,
       author: { en: "Raju Kumar", kn: "ರಾಜು ಕುಮಾರ್" },
@@ -144,6 +267,10 @@ export default function Home() {
     }
   ];
 
+  const posts = activeTab === 'following' 
+    ? [...followedUserPosts, ...initialPosts] 
+    : initialPosts;
+
   const handleLike = (id) => {
     setLikedPosts(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -165,6 +292,29 @@ export default function Home() {
     setToastMessage(t.toasts?.linkCopied || 'Link copied to clipboard');
     setIsShareModalOpen(false);
     setTimeout(() => setToastMessage(''), 2500);
+  };
+
+  function getCategoryLabel(cat) {
+    if (!cat) return language === 'en' ? 'Member' : 'ಸದಸ್ಯ';
+    const labels = {
+      farmer: { en: 'Farmer', kn: 'ರೈತ' },
+      laborer: { en: 'Laborer', kn: 'ಕೂಲಿಯವರು' },
+      machine_owner: { en: 'Machine Owner', kn: 'ಯಂತ್ರ ಮಾಲೀಕ' },
+      machine_operator: { en: 'Operator', kn: 'ಆಪರೇಟರ್' },
+      pesticide_sprayer: { en: 'Sprayer', kn: 'ಸಿಂಪಡಕ' },
+      drone_operator: { en: 'Drone Op.', kn: 'ಡ್ರೋನ್' },
+      transport_provider: { en: 'Transport', kn: 'ಸಾರಿಗೆ' },
+      crop_buyer: { en: 'Buyer', kn: 'ಖರೀದಿದಾರ' },
+      labor_contractor: { en: 'Contractor', kn: 'ಗುತ್ತಿಗೆದಾರ' },
+      agriculture_advisor: { en: 'Advisor', kn: 'ಸಲಹೆಗಾರ' },
+    };
+    return labels[cat]?.[language] || cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  const statusColors = {
+    available: 'bg-emerald-400',
+    busy: 'bg-amber-400',
+    offline: 'bg-slate-300',
   };
 
   return (
@@ -325,86 +475,240 @@ export default function Home() {
                   activeTab === tab ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'
                 }`}
               >
-                {t.tabs?.[tab] || tab}
+                {tab === 'explore'
+                  ? (language === 'en' ? 'Explore People' : 'ಜನರನ್ನು ಅನ್ವೇಷಿಸಿ')
+                  : (t.tabs?.[tab] || tab)
+                }
               </button>
             ))}
           </div>
         </div>
 
-        {/* 4. FEED (BENTO CARDS) */}
-        <div className="px-5 py-8 flex flex-col gap-6">
-          {posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all group animate-[fade-in-up_0.5s_ease-out]">
-              
-              {post.repostedBy && (
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-4 tracking-tight">
-                  <Repeat2 className="w-3.5 h-3.5" />
-                  <span>{post.repostedBy[language]} {t.postLabels?.repostedBy || 'reposted'}</span>
-                </div>
-              )}
-              
-              {/* Profile Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-bold text-slate-700 shadow-inner">
-                    {post.initials}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-[15px] tracking-tight flex items-center gap-2">
-                       {post.author[language]} 
-                       <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest">{post.category[language]}</span>
-                    </h4>
-                    <div className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-400 mt-1">
-                      <MapPin className="w-3.5 h-3.5" /> {post.village[language]} &middot; {post.time[language]}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="mb-6">
-                <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-tight mb-4 flex items-center gap-3">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 shadow-sm text-xl">{post.emoji}</span>
-                  {post.crop[language]}
-                </h3>
-                
-                <div className="flex flex-wrap gap-2.5">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100/50">
-                    <span className="text-emerald-700/60 font-medium text-xs tracking-tight">Wage</span>
-                    <span className="text-emerald-700 font-bold text-sm tracking-tight">{post.wage}</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100/50">
-                    <span className="text-blue-700/60 font-medium text-xs tracking-tight">Workers</span>
-                    <span className="text-blue-700 font-bold text-sm tracking-tight">{typeof post.workersNeeded === 'string' ? post.workersNeeded : post.workersNeeded[language]}</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-slate-500 font-medium text-xs tracking-tight">Date</span>
-                    <span className="text-slate-800 font-bold text-sm tracking-tight">{post.date[language]}</span>
-                  </div>
-                  {activeTab === 'nearby' && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 border border-purple-100/50">
-                      <span className="text-purple-700/60 font-medium text-xs tracking-tight">Dist</span>
-                      <span className="text-purple-700 font-bold text-sm tracking-tight">{post.distance}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-2">
-                <button onClick={() => handleRepost(post.id)} className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-[13px] font-bold transition-colors active:scale-95 ${repostedPosts[post.id] ? 'bg-slate-100 text-slate-900' : 'bg-transparent hover:bg-slate-50 text-slate-500'}`}>
-                  <Repeat2 className="w-4 h-4" /> {repostedPosts[post.id] ? post.reposts + 1 : post.reposts} Repost
-                </button>
-                <button onClick={() => handleLike(post.id)} className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-[13px] font-bold transition-colors active:scale-95 ${likedPosts[post.id] ? 'bg-rose-50 text-rose-600' : 'bg-transparent hover:bg-slate-50 text-slate-500'}`}>
-                  <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-current' : 'fill-none'}`} /> {likedPosts[post.id] ? post.interested + 1 : post.interested} {t.actions_post?.interested || 'Like'}
-                </button>
-                <button onClick={() => handleShareClick(post)} className="flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors active:scale-95">
-                  <Share2 className="w-4 h-4" /> Share
-                </button>
-              </div>
+        {/* ════════════════════════════════════════════
+            EXPLORE TAB — Discover Farmers & Owners
+            ════════════════════════════════════════════ */}
+        {activeTab === 'explore' ? (
+          <div className="px-5 py-6">
+            {/* Section header */}
+            <div className="mb-6">
+              <h2 className="font-black text-xl text-slate-900 tracking-tight">
+                {language === 'en' ? '🌾 Discover Farmers & Owners' : '🌾 ರೈತರು & ಮಾಲೀಕರನ್ನು ಹುಡುಕಿ'}
+              </h2>
+              <p className="text-[13px] text-slate-400 font-medium mt-1">
+                {language === 'en'
+                  ? 'Follow farmers and land owners looking for labour. Get their job updates in your feed.'
+                  : 'ಕೂಲಿಯವರನ್ನು ಹುಡುಕುತ್ತಿರುವ ರೈತರು ಮತ್ತು ಭೂಮಾಲೀಕರನ್ನು ಅನುಸರಿಸಿ.'}
+              </p>
             </div>
-          ))}
-        </div>
+
+            {loadingExplore ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                <span className="text-sm font-semibold text-slate-400">
+                  {language === 'en' ? 'Finding people near you...' : 'ನಿಮ್ಮ ಸಮೀಪದ ಜನರನ್ನು ಹುಡುಕಲಾಗುತ್ತಿದೆ...'}
+                </span>
+              </div>
+            ) : exploreUsers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center text-4xl">👥</div>
+                <p className="text-base font-bold text-slate-900 tracking-tight">
+                  {language === 'en' ? 'No users to discover yet' : 'ಇನ್ನೂ ಯಾರೂ ಕಂಡುಬಂದಿಲ್ಲ'}
+                </p>
+                <p className="text-sm text-slate-400 text-center max-w-xs">
+                  {language === 'en'
+                    ? 'Invite more workers and farmers to join AgroLink!'
+                    : 'ಹೆಚ್ಚಿನ ಕೆಲಸಗಾರರು ಮತ್ತು ರೈತರನ್ನು AgroLink ಗೆ ಆಹ್ವಾನಿಸಿ!'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {exploreUsers.map((person, idx) => {
+                  const isFollowing = followingStates[person._id];
+                  const isLoading = followLoading[person._id];
+                  return (
+                    <div
+                      key={person._id}
+                      className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all p-5 animate-[fade-in-up_0.4s_ease-out]"
+                      style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Avatar */}
+                        <div className="relative flex-shrink-0">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shadow-sm">
+                            {person.avatar ? (
+                              <img src={person.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <span className="text-xl font-black text-slate-500">{person.name?.charAt(0) || '?'}</span>
+                            )}
+                          </div>
+                          {/* Status dot */}
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${statusColors[person.availabilityStatus] || 'bg-slate-300'}`} />
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <h3 className="font-extrabold text-[15px] text-slate-900 tracking-tight truncate">{person.name}</h3>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                {person.categories?.slice(0, 2).map((cat, ci) => (
+                                  <span key={ci} className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
+                                    {getCategoryLabel(cat)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Follow Button */}
+                            <button
+                              onClick={() => handleFollow(person._id)}
+                              disabled={isLoading}
+                              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all active:scale-95 flex-shrink-0 ${
+                                isFollowing
+                                  ? 'bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600'
+                                  : 'bg-slate-900 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                              }`}
+                            >
+                              {isLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : isFollowing ? (
+                                <>
+                                  <UserCheck className="w-4 h-4" />
+                                  {language === 'en' ? 'Following' : 'ಅನುಸರಿಸುತ್ತಿದ್ದಾರೆ'}
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus className="w-4 h-4" />
+                                  {language === 'en' ? 'Follow' : 'ಅನುಸರಿಸಿ'}
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          {/* Location */}
+                          {(person.location?.village || person.location?.district) && (
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-[12px] font-semibold text-slate-400 truncate">
+                                {[person.location.village, person.location.taluk, person.location.district].filter(Boolean).join(', ')}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Stats row */}
+                          <div className="flex items-center gap-4 mt-3">
+                            <div className="flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-[12px] font-bold text-slate-500">
+                                {person.followersCount} {language === 'en' ? 'followers' : 'ಅನುಯಾಯಿಗಳು'}
+                              </span>
+                            </div>
+                            {person.jobsCompleted > 0 && (
+                              <div className="flex items-center gap-1.5">
+                                <Award className="w-3.5 h-3.5 text-amber-500" />
+                                <span className="text-[12px] font-bold text-slate-500">
+                                  {person.jobsCompleted} {language === 'en' ? 'jobs' : 'ಕೆಲಸಗಳು'}
+                                </span>
+                              </div>
+                            )}
+                            {person.rating > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                                <span className="text-[12px] font-bold text-slate-500">{person.rating.toFixed(1)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ════════════════════════════════════════════
+              FOLLOWING & NEARBY TABS — Feed cards
+              ════════════════════════════════════════════ */
+          <div className="px-5 py-8 flex flex-col gap-6">
+
+            {posts.map((post) => (
+              <div key={post.id} className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all group animate-[fade-in-up_0.5s_ease-out]">
+                
+                {post.repostedBy && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-4 tracking-tight">
+                    <Repeat2 className="w-3.5 h-3.5" />
+                    <span>{post.repostedBy[language]} {t.postLabels?.repostedBy || 'reposted'}</span>
+                  </div>
+                )}
+                
+                {/* Profile Header */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-bold text-slate-700 shadow-inner overflow-hidden">
+                      {post.avatar ? (
+                         <img src={post.avatar} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                         post.initials
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-[15px] tracking-tight flex items-center gap-2">
+                         {post.author[language]} 
+                         <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest">{post.category[language]}</span>
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-400 mt-1">
+                        <MapPin className="w-3.5 h-3.5" /> {post.village[language]} &middot; {post.time[language]}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="mb-6">
+                  <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-tight mb-4 flex items-center gap-3">
+                    <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 shadow-sm text-xl">{post.emoji}</span>
+                    {post.crop[language]}
+                  </h3>
+                  
+                  <div className="flex flex-wrap gap-2.5">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100/50">
+                      <span className="text-emerald-700/60 font-medium text-xs tracking-tight">Wage</span>
+                      <span className="text-emerald-700 font-bold text-sm tracking-tight">{post.wage}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100/50">
+                      <span className="text-blue-700/60 font-medium text-xs tracking-tight">Workers</span>
+                      <span className="text-blue-700 font-bold text-sm tracking-tight">{typeof post.workersNeeded === 'string' ? post.workersNeeded : post.workersNeeded[language]}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
+                      <span className="text-slate-500 font-medium text-xs tracking-tight">Date</span>
+                      <span className="text-slate-800 font-bold text-sm tracking-tight">{post.date[language]}</span>
+                    </div>
+                    {activeTab === 'nearby' && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 border border-purple-100/50">
+                        <span className="text-purple-700/60 font-medium text-xs tracking-tight">Dist</span>
+                        <span className="text-purple-700 font-bold text-sm tracking-tight">{post.distance}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-2">
+                  <button onClick={() => handleRepost(post.id)} className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-[13px] font-bold transition-colors active:scale-95 ${repostedPosts[post.id] ? 'bg-slate-100 text-slate-900' : 'bg-transparent hover:bg-slate-50 text-slate-500'}`}>
+                    <Repeat2 className="w-4 h-4" /> {repostedPosts[post.id] ? post.reposts + 1 : post.reposts} Repost
+                  </button>
+                  <button onClick={() => handleLike(post.id)} className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-[13px] font-bold transition-colors active:scale-95 ${likedPosts[post.id] ? 'bg-rose-50 text-rose-600' : 'bg-transparent hover:bg-slate-50 text-slate-500'}`}>
+                    <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-current' : 'fill-none'}`} /> {likedPosts[post.id] ? post.interested + 1 : post.interested} {t.actions_post?.interested || 'Like'}
+                  </button>
+                  <button onClick={() => handleShareClick(post)} className="flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors active:scale-95">
+                    <Share2 className="w-4 h-4" /> Share
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* FLOATING ACTION BUTTON */}
@@ -438,7 +742,7 @@ export default function Home() {
 
       {/* Toasts */}
       <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl transition-all z-[80] whitespace-nowrap ${toastMessage ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95 pointer-events-none'}`}>
-        ✨ {toastMessage}
+        {toastMessage}
       </div>
 
     </div>
